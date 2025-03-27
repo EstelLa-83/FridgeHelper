@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart';
 import 'package:fridge/page/page_main.dart';
 import 'package:fridge/controller/food_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MultiProvider(
-    providers: [ChangeNotifierProvider(create: (_) => FoodNotifier())],
-    child: MyApp(),
-  ));
+  // runApp(MultiProvider(
+  //   providers: [ChangeNotifierProvider(create: (_) => FoodNotifier())],
+  //   child: MyApp(),
+  // ));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -21,8 +22,8 @@ class MyApp extends StatelessWidget {
       initialRoute: "/main",
       routes: {
         '/': (context) => const MainPage(),
-        '/main': (context) => const MainPage()
-      }
+        '/main': (context) => const MainPage(),
+      },
     );
   }
 }

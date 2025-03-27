@@ -43,3 +43,20 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# VS Code workspace settings 
+.vscode/settings.json
+.vscode/launch.json
+
+
+# Firebase / Crashlytics
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Coverage
+coverage/
+
+
+# test
+test_output/
+test/**/generated/
