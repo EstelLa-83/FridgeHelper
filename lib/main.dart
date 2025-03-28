@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
 import 'package:fridge/page/page_main.dart';
 import 'package:fridge/controller/food_controller.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // runApp(MultiProvider(
-  //   providers: [ChangeNotifierProvider(create: (_) => FoodNotifier())],
-  //   child: MyApp(),
-  // ));
+  tz.initializeTimeZones();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   runApp(const MyApp());
 }
 
