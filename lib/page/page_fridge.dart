@@ -33,9 +33,19 @@ class _FridgePageState extends State<FridgePage> {
     }
   }
 
+  void sortByExpiryDate(List list) {
+    list.sort((a, b) {
+      final dateA = DateTime.tryParse(a["expiryDate"]);
+      final dateB = DateTime.tryParse(b["expiryDate"]);
+      if (dateA == null || dateB == null) return 0;
+      return dateA.compareTo(dateB);
+    });
+  }
+
   void addFood(Map<String, dynamic> food) {
     setState(() {
       info.add(food);
+      sortByExpiryDate(info);
     });
     saveFoodInfo(info);
   }
@@ -44,6 +54,7 @@ class _FridgePageState extends State<FridgePage> {
   void initState() {
     super.initState();
     loadFoodInfo().then((loaded) {
+      sortByExpiryDate(loaded);
       setState(() {
         info = loaded;
       });
@@ -207,19 +218,16 @@ class _FridgePageState extends State<FridgePage> {
               title: Text('"${info[idx]["name"]}"'),
               content: Row(
                 children: [
-                        const Text("New expiry: "),
-                        Text(
-                          selectedDate != null
-                              ? "${selectedDate!.toLocal()}".split(' ')[0]
-                              : "Invalid",
-                          style: TextStyle(
-                            color:
-                                selectedDate != null
-                                    ? Colors.black
-                                    : Colors.grey,
-                          ),
-                        ),
-                                          IconButton(
+                  const Text("New expiry: "),
+                  Text(
+                    selectedDate != null
+                        ? "${selectedDate!.toLocal()}".split(' ')[0]
+                        : "Invalid",
+                    style: TextStyle(
+                      color: selectedDate != null ? Colors.black : Colors.grey,
+                    ),
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.calendar_today),
                     onPressed: () async {
                       DateTime? picked = await showDatePicker(
@@ -249,6 +257,7 @@ class _FridgePageState extends State<FridgePage> {
                       setState(() {
                         info[idx]["expiryDate"] =
                             selectedDate!.toIso8601String();
+                        sortByExpiryDate(info);
                       });
                       saveFoodInfo(info);
                       Navigator.pop(context);
