@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fridge/service/notification_service.dart'; // 너의 서비스 위치에 맞춰 경로 조정
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -13,6 +14,34 @@ class _FridgePageState extends State<SettingPage> {
   int _hour = 13;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSettings(); // 저장된 설정 로딩
+  }
+
+  Future<void> _loadSettings() async {
+    final settings = await loadNotificationSettings();
+    setState(() {
+      _notificationEnabled = settings.enabled;
+      _daysBefore = settings.daysBefore;
+      _hour = settings.hour;
+    });
+  }
+
+  Future<void> _saveSettings() async {
+    final settings = NotificationSettings(
+      enabled: _notificationEnabled,
+      daysBefore: _daysBefore,
+      hour: _hour,
+    );
+    await saveNotificationSettings(settings);
+
+    // 알림 재스케줄 호출
+    // final foodList = await getCurrentFoodList();
+    // await scheduleGroupedNotifications(foodList);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDisabled = !_notificationEnabled;
 
@@ -24,7 +53,7 @@ class _FridgePageState extends State<SettingPage> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // 🔥 뒤로가기 제거
+        automaticallyImplyLeading: false,
         title: const Text('설정'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -52,7 +81,7 @@ class _FridgePageState extends State<SettingPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🔘 알림 설정
+                  // 알림 설정
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -68,13 +97,14 @@ class _FridgePageState extends State<SettingPage> {
                         activeColor: const Color(0xFF395BA9),
                         onChanged: (value) {
                           setState(() => _notificationEnabled = value);
+                          _saveSettings(); // 변경 저장
                         },
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
 
-                  // ⏱ 알림 시간 설명
+                  // 알림 시간 설명
                   Text('유통기한 알림 시간 설정', style: labelStyle),
                   const SizedBox(height: 4),
                   Text(
@@ -86,7 +116,7 @@ class _FridgePageState extends State<SettingPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 🧩 드롭다운 2개
+                  // 드롭다운 2개
                   AbsorbPointer(
                     absorbing: isDisabled,
                     child: Opacity(
@@ -106,6 +136,7 @@ class _FridgePageState extends State<SettingPage> {
                               ),
                               onChanged: (value) {
                                 setState(() => _daysBefore = value ?? 1);
+                                _saveSettings();
                               },
                             ),
                           ),
@@ -131,6 +162,7 @@ class _FridgePageState extends State<SettingPage> {
                               ),
                               onChanged: (value) {
                                 setState(() => _hour = value ?? 13);
+                                _saveSettings();
                               },
                             ),
                           ),
