@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:fridge/service/notification_service.dart'; // 너의 서비스 위치에 맞춰 경로 조정
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fridge/service/noti_scheduler.dart';
+import 'package:fridge/service/notification_service.dart';
+import 'dart:convert';
+import 'package:fridge/model/food.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -28,6 +32,17 @@ class _FridgePageState extends State<SettingPage> {
     });
   }
 
+  Future<List> loadFoodInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('cached_food_list');
+
+    if (jsonString != null) {
+      return jsonDecode(jsonString); // JSON 문자열 → List
+    } else {
+      return []; // 없으면 빈 리스트 반환
+    }
+  }
+
   Future<void> _saveSettings() async {
     final settings = NotificationSettings(
       enabled: _notificationEnabled,
@@ -37,8 +52,9 @@ class _FridgePageState extends State<SettingPage> {
     await saveNotificationSettings(settings);
 
     // 알림 재스케줄 호출
-    // final foodList = await getCurrentFoodList();
-    // await scheduleGroupedNotifications(foodList);
+    final rawList = await loadFoodInfo(); // List<dynamic>
+    final foodList = rawList.map((e) => Food.fromJson(e)).toList();
+    await scheduleGroupedNotifications(foodList);
   }
 
   @override
@@ -172,6 +188,15 @@ class _FridgePageState extends State<SettingPage> {
                   ),
                 ],
               ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await showTestNotification();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('테스트 알림 예약 완료 (10초 후 울림)')),
+                );
+              },
+              child: const Text('테스트 알림 보내기'),
             ),
           ],
         ),

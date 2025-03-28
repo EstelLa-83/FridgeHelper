@@ -54,3 +54,31 @@ Future<void> scheduleGroupedNotifications(List<Food> foodList) async {
     );
   }
 }
+
+/// 테스트용 알림 예약: 현재 시각 기준 10초 뒤 알림 울리기
+Future<void> showTestNotification() async {
+  final scheduled = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10));
+
+  print('✅ 알림 예약 시각: $scheduled');
+
+  await flutterLocalNotificationsPlugin.zonedSchedule(
+    999999,
+    '🔔 테스트 알림!',
+    '알림이 정상적으로 작동 중입니다.',
+    scheduled,
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'fridge_channel',
+        'Fridge Notifications',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+      ),
+    ),
+    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    uiLocalNotificationDateInterpretation:
+    UILocalNotificationDateInterpretation.absoluteTime,
+  );
+
+  print('✅ zonedSchedule 호출 완료');
+}
