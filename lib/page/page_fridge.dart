@@ -132,6 +132,7 @@ class _FridgePageState extends State<FridgePage> {
   void showAddFoodDialog(BuildContext context) {
     final nameController = TextEditingController();
     DateTime? selectedDate;
+    TimeOfDay? selectedTime;
 
     showDialog(
       context: context,
@@ -150,7 +151,7 @@ class _FridgePageState extends State<FridgePage> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Text("expiryDate: "),
+                      const Text("Expiry Date: "),
                       Text(
                         selectedDate != null
                             ? "${selectedDate!.toLocal()}".split(' ')[0]
@@ -178,6 +179,34 @@ class _FridgePageState extends State<FridgePage> {
                       ),
                     ],
                   ),
+                  Row(
+                    children: [
+                      const Text("Time: "),
+                      Text(
+                        selectedTime != null
+                            ? selectedTime!.format(context)
+                            : "Not Selected (00:00)",
+                        style: TextStyle(
+                          color:
+                              selectedTime != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.access_time),
+                        onPressed: () async {
+                          TimeOfDay? picked = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay(hour: 0, minute: 0),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedTime = picked;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
               actions: [
@@ -190,9 +219,17 @@ class _FridgePageState extends State<FridgePage> {
                   onPressed: () {
                     if (nameController.text.isNotEmpty &&
                         selectedDate != null) {
+                      final expiryDateTime = DateTime(
+                        selectedDate!.year,
+                        selectedDate!.month,
+                        selectedDate!.day,
+                        selectedTime?.hour ?? 0, // 시간 선택 없으면 00:00
+                        selectedTime?.minute ?? 0,
+                      );
+
                       addFood({
                         "name": nameController.text,
-                        "expiryDate": selectedDate!.toIso8601String(),
+                        "expiryDate": expiryDateTime.toIso8601String(),
                       });
                       Navigator.pop(context);
                     }
@@ -208,6 +245,11 @@ class _FridgePageState extends State<FridgePage> {
 
   void showEditDialog(BuildContext context, int idx) {
     DateTime? selectedDate = DateTime.tryParse(info[idx]["expiryDate"]);
+    TimeOfDay? selectedTime;
+
+    if (selectedDate != null) {
+      selectedTime = TimeOfDay.fromDateTime(selectedDate);
+    }
 
     showDialog(
       context: context,
@@ -216,32 +258,67 @@ class _FridgePageState extends State<FridgePage> {
           builder: (context, setState) {
             return AlertDialog(
               title: Text('"${info[idx]["name"]}"'),
-              content: Row(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text("New expiry: "),
-                  Text(
-                    selectedDate != null
-                        ? "${selectedDate!.toLocal()}".split(' ')[0]
-                        : "Invalid",
-                    style: TextStyle(
-                      color: selectedDate != null ? Colors.black : Colors.grey,
-                    ),
+                  Row(
+                    children: [
+                      const Text("New date: "),
+                      Text(
+                        selectedDate != null
+                            ? "${selectedDate!.toLocal()}".split(' ')[0]
+                            : "Invalid",
+                        style: TextStyle(
+                          color:
+                              selectedDate != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: () async {
+                          DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedDate = picked;
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: () async {
-                      DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate ?? DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          selectedDate = picked;
-                        });
-                      }
-                    },
+                  Row(
+                    children: [
+                      const Text("New time: "),
+                      Text(
+                        selectedTime != null
+                            ? selectedTime!.format(context)
+                            : "Not selected (00:00)",
+                        style: TextStyle(
+                          color:
+                              selectedTime != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.access_time),
+                        onPressed: () async {
+                          TimeOfDay? picked = await showTimePicker(
+                            context: context,
+                            initialTime:
+                                selectedTime ?? TimeOfDay(hour: 0, minute: 0),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedTime = picked;
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -254,9 +331,17 @@ class _FridgePageState extends State<FridgePage> {
                   child: const Text('Save'),
                   onPressed: () {
                     if (selectedDate != null) {
+                      final updatedDateTime = DateTime(
+                        selectedDate!.year,
+                        selectedDate!.month,
+                        selectedDate!.day,
+                        selectedTime?.hour ?? 0,
+                        selectedTime?.minute ?? 0,
+                      );
+
                       setState(() {
                         info[idx]["expiryDate"] =
-                            selectedDate!.toIso8601String();
+                            updatedDateTime.toIso8601String();
                         sortByExpiryDate(info);
                       });
                       saveFoodInfo(info);
