@@ -14,7 +14,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
 
-  await requestExactAlarmPermissionIfNeeded();
   await requestNotificationPermissionIfNeeded();
 
   const AndroidInitializationSettings initializationSettingsAndroid =
