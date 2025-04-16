@@ -18,7 +18,6 @@ Future<void> main() async {
   // 앱으로 실행 시 실행 (chrome일 땐 필요 X)
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     tz.initializeTimeZones();
-
     await requestExactAlarmPermissionIfNeeded();
     await requestNotificationPermissionIfNeeded();
 
