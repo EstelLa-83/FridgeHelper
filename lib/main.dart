@@ -1,30 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:fridge/page/page_login.dart';
 import 'package:fridge/page/page_main.dart';
 import 'package:fridge/controller/food_controller.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fridge/service/noti_permission.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  tz.initializeTimeZones();
 
-  await requestExactAlarmPermissionIfNeeded();
-  await requestNotificationPermissionIfNeeded();
+  // 앱으로 실행 시 실행 (chrome일 땐 필요 X)
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    tz.initializeTimeZones();
 
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+    await requestExactAlarmPermissionIfNeeded();
+    await requestNotificationPermissionIfNeeded();
 
-  const InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-  );
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
   runApp(const MyApp());
 }
 
@@ -35,9 +41,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Fridge',
-      initialRoute: "/main",
+      initialRoute: "/login",
       routes: {
-        '/': (context) => const MainPage(),
+        '/': (context) => const LoginPage(),
+        '/login': (context) => const LoginPage(),
         '/main': (context) => const MainPage(),
       },
     );
