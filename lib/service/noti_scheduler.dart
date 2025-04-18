@@ -2,6 +2,56 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:fridge/service/notification_service.dart';
 import 'package:fridge/model/food.dart';
+import 'package:fridge/controller/global.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<List<Map<String, dynamic>>> fetchFoodsFromServer(String accessToken) async {
+  final response = await http.get(
+    Uri.parse('$BASE_URL/foods/group'),
+    headers: {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+    return data.cast<Map<String, dynamic>>();
+  } else {
+    throw Exception('Failed to fetch food list. Code: ${response.statusCode}');
+  }
+}
+
+
+Future<void> syncAllExpiringNotifications() async {
+  final settings = await loadNotificationSettings();
+  if (!settings.enabled) {
+    await flutterLocalNotificationsPlugin.cancelAll();
+    return;
+  }
+
+  final accessToken = await storage.read(key: 'accessToken');
+  if (accessToken == null) {
+    print("AccessToken not found");
+    return;
+  }
+
+  try {
+    final rawFoods = await fetchFoodsFromServer(accessToken);
+
+    final List<Food> foodList = rawFoods.map((f) => Food(
+      name: f["name"],
+      date: DateTime.parse(f["expiryDate"]),
+      count: f["count"],
+      isFrozen: f["storageType"],
+    )).toList();
+
+    await scheduleGroupedNotifications(foodList);
+  } catch (e) {
+    print('알림 동기화 실패: $e');
+  }
+}
 
 /// 유통기한 임박 알림을 시각별로 묶어서 한 번만 예약하는 함수
 Future<void> scheduleGroupedNotifications(List<Food> foodList) async {
@@ -35,6 +85,9 @@ Future<void> scheduleGroupedNotifications(List<Food> foodList) async {
     final tzDate = tz.TZDateTime.from(entry.key, tz.local);
     final count = entry.value.length;
 
+    print("⏰ 알림 예약됨 - ${tzDate.toLocal()} / ${count}개 품목");
+
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       entry.key.hashCode, // 고유 ID
       '🧊 유통기한 임박!',
@@ -50,10 +103,12 @@ Future<void> scheduleGroupedNotifications(List<Food> foodList) async {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 }
+
+
 
 /// 테스트용 알림 예약: 현재 시각 기준 10초 뒤 알림 울리기
 Future<void> showTestNotification() async {

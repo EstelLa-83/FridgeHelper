@@ -6,6 +6,8 @@ import 'package:fridge/controller/global.dart';
 import 'package:fridge/controller/auth_service.dart';
 import 'dart:convert';
 
+import '../service/noti_scheduler.dart';
+
 class FridgeCollectionPage extends StatefulWidget {
   const FridgeCollectionPage({super.key});
 
@@ -327,6 +329,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
 
     if (response.statusCode == 204) {
       await _loadFridgesFromServer();
+      await syncAllExpiringNotifications();
     } 
     else {
       print("Failed to delete fridge: ${response.statusCode}");
