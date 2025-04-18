@@ -3,8 +3,8 @@ import 'package:fridge/widget/fridge/food_card.dart';
 import 'package:fridge/widget/fridge/fridge_appbar.dart';
 import 'package:fridge/widget/fridge/fridge_divider.dart';
 import 'package:fridge/controller/global.dart';
+import 'package:fridge/controller/auth_service.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class FridgePage extends StatefulWidget {
@@ -36,9 +36,10 @@ class _FridgePageState extends State<FridgePage> {
   }
 
   Future<void> _loadFoodsFromServer() async {
-    final response = await http.get(
-      Uri.parse("$BASE_URL/foods?fridgeId=${widget.fridgeId}"),
-      headers: await buildAuthHeaders(),
+    final response = await authenticatedRequest(
+      context: context,
+      url: Uri.parse("$BASE_URL/foods?fridgeId=${widget.fridgeId}"),
+      method: 'GET',
     );
 
     if (response.statusCode == 200) {
@@ -319,17 +320,18 @@ class _FridgePageState extends State<FridgePage> {
                         selectedTime?.minute ?? 0,
                       );
 
-                      final response = await http.post(
-                        Uri.parse("$BASE_URL/foods"),
-                        headers: await buildAuthHeaders(),
-                        body: jsonEncode({
+                      final response = await authenticatedRequest(
+                        context: context,
+                        url: Uri.parse("$BASE_URL/foods"),
+                        method: "POST",
+                        body: {
                           "name": nameController.text,
                           "count": count,
                           "expiryDate": DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(expiryDateTime),
                           "memo": "",
                           "storageType": selectedIsFrozen == "FROZEN" ? "FROZEN" : "COLD",
                           "fridgeId": widget.fridgeId,
-                        }),
+                        },
                       );
 
                       if (response.statusCode == 201) {
@@ -371,9 +373,10 @@ class _FridgePageState extends State<FridgePage> {
 
     if (confirm != true) return;
 
-    final response = await http.delete(
-      Uri.parse("$BASE_URL/foods/$foodId"),
-      headers: await buildAuthHeaders(),
+    final response = await authenticatedRequest(
+      context: context,
+      url: Uri.parse("$BASE_URL/foods/$foodId"),
+      method: "DELETE",
     );
 
     if (response.statusCode == 204) {
@@ -550,17 +553,18 @@ class _FridgePageState extends State<FridgePage> {
 
                       final parsedCount = int.tryParse(countController.text) ?? 1;
 
-                      final response = await http.put(
-                        Uri.parse("$BASE_URL/foods/${foodList[idx]['id']}"),
-                        headers: await buildAuthHeaders(),
-                        body: jsonEncode({
+                      final response = await authenticatedRequest(
+                        context: context,
+                        url: Uri.parse("$BASE_URL/foods/${foodList[idx]['id']}"),
+                        method: "PUT",
+                        body: {
                           "name": foodList[idx]['name'],
                           "count": parsedCount,
                           "expiryDate":DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(updatedDateTime),
                           "memo": "",
                           "storageType": selectedIsFrozen == "FROZEN" ? "FROZEN" : "COLD",
                           "fridgeId": widget.fridgeId,
-                        }),
+                        },
                       );
 
                       if (response.statusCode == 200) {

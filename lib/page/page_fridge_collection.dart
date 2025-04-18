@@ -3,7 +3,7 @@ import 'package:fridge/model/fridge.dart';
 import 'package:fridge/widget/fridge/fridge_card.dart';
 import 'package:fridge/page/page_fridge.dart';
 import 'package:fridge/controller/global.dart';
-import 'package:http/http.dart' as http;
+import 'package:fridge/controller/auth_service.dart';
 import 'dart:convert';
 
 class FridgeCollectionPage extends StatefulWidget {
@@ -25,12 +25,10 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
       return;
     }
 
-    final response = await http.get(
-      Uri.parse("$BASE_URL/users/me"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
+    final response = await authenticatedRequest(
+      context: context,
+      url: Uri.parse("$BASE_URL/users/me"),
+      method: "GET",
     );
 
     if (response.statusCode == 200) {
@@ -208,12 +206,10 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
                   return;
                 }
 
-                final response = await http.post(
-                  Uri.parse("$BASE_URL/fridges?name=$name"),
-                  headers: {
-                    "Authorization": "Bearer $token",
-                    "Content-Type": "application/json",
-                  },
+                final response = await authenticatedRequest(
+                  context: context,
+                  url: Uri.parse("$BASE_URL/fridges?name=$name"),
+                  method: "POST",
                 );
 
                 if (response.statusCode == 201) {
@@ -271,15 +267,13 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
                   return;
                 }
 
-                final response = await http.put(
-                  Uri.parse("$BASE_URL/fridges/${fridge.fridgeId}"),
-                  headers: {
-                    "Authorization": "Bearer $token",
-                    "Content-Type": "application/json",
-                  },
-                  body: jsonEncode({
+                final response = await authenticatedRequest(
+                  context: context,
+                  url: Uri.parse("$BASE_URL/fridges/${fridge.fridgeId}"),
+                  method: "PUT",
+                  body: {
                     "name": newName,
-                  }),
+                  },
                 );
 
                 if (response.statusCode == 200) {
@@ -325,12 +319,10 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
 
     if (confirm != true) return;
 
-    final response = await http.delete(
-      Uri.parse("$BASE_URL/fridges/$fridgeId"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
+    final response = await authenticatedRequest(
+      context: context,
+      url: Uri.parse("$BASE_URL/fridges/$fridgeId"),
+      method: "DELETE",
     );
 
     if (response.statusCode == 204) {
