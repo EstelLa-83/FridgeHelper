@@ -21,7 +21,7 @@ class FridgeCollectionCard extends StatelessWidget {
       onTap: routefunc,
       child: Container(
         width: MediaQuery.of(context).size.width * 0.45,
-        height: 190.0,
+        height: 150.0,
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: const [
@@ -34,42 +34,51 @@ class FridgeCollectionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.0),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Stack(
+          padding: const EdgeInsets.all(4.0),
+          child: Column(
             children: [
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 18),
-                      onPressed: onEdit,
-                      tooltip: 'Edit',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, size: 18),
-                      onPressed: onDelete,
-                      tooltip: 'Delete',
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 30),
-                        child: Text(
-                          fridge.fridgeName,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              // 수정/삭제 아이콘 Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 18),
+                    onPressed: onEdit,
+                    tooltip: 'Edit',
+                    padding: EdgeInsets.zero, // ← 패딩 제거
+                    constraints: const BoxConstraints(), // ← 크기 최소화
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 18),
+                    onPressed: onDelete,
+                    tooltip: 'Delete',
+                    padding: EdgeInsets.zero, // ← 패딩 제거
+                    constraints: const BoxConstraints(), // ← 크기 최소화
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 2.0),
+              const Spacer(),
+
+              // 냉장고 이름
+              Center(
+                child: Text(
+                  fridge.fridgeName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-              )
-            ],
+              ),
+
+              const SizedBox(height: 10.0),
+              const Spacer(),
+            ],          
           ),
         ),
       ),
