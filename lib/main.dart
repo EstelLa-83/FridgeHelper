@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fridge/page/page_login.dart';
 import 'package:fridge/page/page_main.dart';
+import 'package:fridge/page/page_family.dart';
+import 'package:fridge/page/page_setting.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fridge/service/noti_permission.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -45,6 +47,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginPage(),
         '/login': (context) => const LoginPage(),
         '/main': (context) => const MainPage(),
+        '/family': (context) => const FamilyPage(),
+        '/setting': (context) => const SettingPage(),
       },
     );
   }
