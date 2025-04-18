@@ -27,14 +27,6 @@ class _FridgePageState extends State<FridgePage> {
   List filteredFoodList = [];
   String selectedStorageType = "ALL";
 
-  Future<Map<String, String>> buildAuthHeaders() async {
-    final token = await storage.read(key: 'accessToken');
-    return {
-      "Authorization": "Bearer $token",
-      "Content-Type": "application/json",
-    };
-  }
-
   Future<void> _loadFoodsFromServer() async {
     final response = await authenticatedRequest(
       context: context,
