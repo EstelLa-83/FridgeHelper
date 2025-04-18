@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fridge/model/fridge.dart';
 import 'package:fridge/widget/fridge/fridge_card.dart';
 import 'package:fridge/page/page_fridge.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:fridge/global.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-late final FlutterSecureStorage storage;
 
 class FridgeCollectionPage extends StatefulWidget {
   const FridgeCollectionPage({super.key});
@@ -57,7 +55,6 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
   @override
   void initState() {
     super.initState();
-    storage = const FlutterSecureStorage();
     _loadFridgesFromServer();
   }
 
