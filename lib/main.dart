@@ -38,6 +38,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Fridge',
+      theme: ThemeData(
+        fontFamily: 'NotoSansKR',
+      ),
       initialRoute: "/login",
       routes: {
         '/': (context) => const LoginPage(),

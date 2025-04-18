@@ -37,7 +37,7 @@ class _FridgePageState extends State<FridgePage> {
 
   Future<void> _loadFoodsFromServer() async {
     final response = await http.get(
-      Uri.parse("http://localhost:8080/foods?fridgeId=${widget.fridgeId}"),
+      Uri.parse("$BASE_URL/foods?fridgeId=${widget.fridgeId}"),
       headers: await buildAuthHeaders(),
     );
 
@@ -320,7 +320,7 @@ class _FridgePageState extends State<FridgePage> {
                       );
 
                       final response = await http.post(
-                        Uri.parse("http://localhost:8080/foods"),
+                        Uri.parse("$BASE_URL/foods"),
                         headers: await buildAuthHeaders(),
                         body: jsonEncode({
                           "name": nameController.text,
@@ -372,7 +372,7 @@ class _FridgePageState extends State<FridgePage> {
     if (confirm != true) return;
 
     final response = await http.delete(
-      Uri.parse("http://localhost:8080/foods/$foodId"),
+      Uri.parse("$BASE_URL/foods/$foodId"),
       headers: await buildAuthHeaders(),
     );
 
@@ -551,7 +551,7 @@ class _FridgePageState extends State<FridgePage> {
                       final parsedCount = int.tryParse(countController.text) ?? 1;
 
                       final response = await http.put(
-                        Uri.parse("http://localhost:8080/foods/${foodList[idx]['id']}"),
+                        Uri.parse("$BASE_URL/foods/${foodList[idx]['id']}"),
                         headers: await buildAuthHeaders(),
                         body: jsonEncode({
                           "name": foodList[idx]['name'],

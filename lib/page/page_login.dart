@@ -19,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
     final pw = _pwController.text.trim();
 
     final response = await http.post(
-      Uri.parse('http://192.168.0.11:8080/auth/login'),
+      Uri.parse('$BASE_URL/auth/login'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": id, "password": pw}),
     );
@@ -125,7 +125,7 @@ void _showSignUpModal() {
                             }
 
                             final checkResponse = await http.get(
-                              Uri.parse("http://192.168.0.11:8080/auth/check-email?email=$id"),
+                              Uri.parse("$BASE_URL/auth/check-email?email=$id"),
                             );
 
                             if (checkResponse.statusCode == 200) {
@@ -198,7 +198,7 @@ void _showSignUpModal() {
                   }
 
                   final response = await http.post(
-                    Uri.parse("http://192.168.0.11:8080/auth/signup"),
+                    Uri.parse("$BASE_URL/auth/signup"),
                     headers: {"Content-Type": "application/json"},
                     body: jsonEncode({
                       "name": nickname,

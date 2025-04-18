@@ -26,7 +26,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
     }
 
     final response = await http.get(
-      Uri.parse("http://192.168.0.11:8080/users/me"),
+      Uri.parse("$BASE_URL/users/me"),
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
@@ -209,7 +209,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
                 }
 
                 final response = await http.post(
-                  Uri.parse("http://192.168.0.11:8080/fridges?name=$name"),
+                  Uri.parse("$BASE_URL/fridges?name=$name"),
                   headers: {
                     "Authorization": "Bearer $token",
                     "Content-Type": "application/json",
@@ -272,7 +272,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
                 }
 
                 final response = await http.put(
-                  Uri.parse("http://192.168.0.11:8080/fridges/${fridge.fridgeId}"),
+                  Uri.parse("$BASE_URL/fridges/${fridge.fridgeId}"),
                   headers: {
                     "Authorization": "Bearer $token",
                     "Content-Type": "application/json",
@@ -326,7 +326,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
     if (confirm != true) return;
 
     final response = await http.delete(
-      Uri.parse("http://192.168.0.11:8080/fridges/$fridgeId"),
+      Uri.parse("$BASE_URL/fridges/$fridgeId"),
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
