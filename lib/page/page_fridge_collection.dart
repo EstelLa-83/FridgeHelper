@@ -34,7 +34,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
     );
 
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
 
       final List<Fridge> fetchedFridges = (json["fridges"] as List).map((item) {
         return Fridge(
