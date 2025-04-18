@@ -9,10 +9,12 @@ import 'dart:convert';
 
 class FridgePage extends StatefulWidget {
   final int fridgeId;
+  final String fridgeName;
 
   const FridgePage({
     super.key,
     required this.fridgeId,
+    required this.fridgeName,
     });
 
   @override
@@ -89,22 +91,11 @@ class _FridgePageState extends State<FridgePage> {
       body: SafeArea(
         child: Column(
           children: [
-            FridgeAppBar(),
-            Row(
-              children: [
-                Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    showAddFoodDialog(context);
-                  },
-                ),
-                const SizedBox(width: 8.0),
-              ],
+            FridgeAppBar(
+              fridgeName: widget.fridgeName,
+              onAddPressed: () => showAddFoodDialog(context),
             ),
-            const SizedBox(height: 5),
-            const Divider(color: Colors.black26, height: 2),
-            const SizedBox(height: 5),
+            const SizedBox(height: 10),
             FridgeDivider(
               onTypeChanged: (type) {
                 setState(() {
@@ -164,135 +155,140 @@ class _FridgePageState extends State<FridgePage> {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Add Food'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Food Name'),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: 340,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text("Count: "),
-                      IconButton(
-                            icon: Icon(Icons.remove),
-                            onPressed: () {
-                              if (count > 1) {
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Food Name'),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          const Text("Count: "),
+                          IconButton(
+                                icon: Icon(Icons.remove),
+                                onPressed: () {
+                                  if (count > 1) {
+                                    setState(() {
+                                      count--;
+                                      countController.text = count.toString();
+                                    });
+                                  }
+                                },
+                              ),
+                              SizedBox(
+                                width: 40,
+                                child: TextField(
+                                  controller: countController,
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (val) {
+                                    final parsed = int.tryParse(val);
+                                    if (parsed != null && parsed > 0) {
+                                      setState(() {
+                                        count = parsed;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.add),
+                                onPressed: () {
+                                  setState(() {
+                                    count++;
+                                    countController.text = count.toString();
+                                  });
+                                },
+                              ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          const Text("Status: "),
+                          DropdownButton<String>(
+                            value: selectedIsFrozen,
+                            items: isFrozenOptions.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedIsFrozen = newValue!;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          const Text("Expiry Date: "),
+                          Text(
+                            selectedDate != null
+                                ? "${selectedDate!.toLocal()}".split(' ')[0]
+                                : "Not Selected",
+                            style: TextStyle(
+                              color:
+                                  selectedDate != null ? Colors.black : Colors.grey,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.calendar_today),
+                            onPressed: () async {
+                              DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) {
                                 setState(() {
-                                  count--;
-                                  countController.text = count.toString();
+                                  selectedDate = picked;
                                 });
                               }
                             },
                           ),
-                          SizedBox(
-                            width: 40,
-                            child: TextField(
-                              controller: countController,
-                              textAlign: TextAlign.center,
-                              keyboardType: TextInputType.number,
-                              onChanged: (val) {
-                                final parsed = int.tryParse(val);
-                                if (parsed != null && parsed > 0) {
-                                  setState(() {
-                                    count = parsed;
-                                  });
-                                }
-                              },
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Text("Expiry Time: "),
+                          Text(
+                            selectedTime != null
+                                ? selectedTime!.format(context)
+                                : "Not Selected",
+                            style: TextStyle(
+                              color:
+                                  selectedTime != null ? Colors.black : Colors.grey,
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.add),
-                            onPressed: () {
-                              setState(() {
-                                count++;
-                                countController.text = count.toString();
-                              });
+                            icon: const Icon(Icons.access_time),
+                            onPressed: () async {
+                              TimeOfDay? picked = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay(hour: 0, minute: 0),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  selectedTime = picked;
+                                });
+                              }
                             },
                           ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Text("Status: "),
-                      DropdownButton<String>(
-                        value: selectedIsFrozen,
-                        items: isFrozenOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedIsFrozen = newValue!;
-                          });
-                        },
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Text("Expiry Date: "),
-                      Text(
-                        selectedDate != null
-                            ? "${selectedDate!.toLocal()}".split(' ')[0]
-                            : "Not Selected",
-                        style: TextStyle(
-                          color:
-                              selectedDate != null ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () async {
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedDate = picked;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Text("Time: "),
-                      Text(
-                        selectedTime != null
-                            ? selectedTime!.format(context)
-                            : "Not Selected (00:00)",
-                        style: TextStyle(
-                          color:
-                              selectedTime != null ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.access_time),
-                        onPressed: () async {
-                          TimeOfDay? picked = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay(hour: 0, minute: 0),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedTime = picked;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -336,7 +332,9 @@ class _FridgePageState extends State<FridgePage> {
                     }
                   },
                 ),
+            
               ],
+            
             );
           },
         );
@@ -386,7 +384,7 @@ class _FridgePageState extends State<FridgePage> {
     int count = foodList[idx]["count"] ?? 1;
     final countController = TextEditingController(text: count.toString());
     String selectedIsFrozen = foodList[idx]["storageType"] == "FROZEN" ? "FROZEN" : "COLD";
-    final isFrozenOptions = ["Cold", "Frozen"];
+    final isFrozenOptions = ["COLD", "FROZEN"];
 
     if (selectedDate != null) {
       selectedTime = TimeOfDay.fromDateTime(selectedDate);
@@ -398,133 +396,147 @@ class _FridgePageState extends State<FridgePage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('"${foodList[idx]["name"]}"'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      const Text("New date: "),
-                      Text(
-                        selectedDate != null
-                            ? "${selectedDate!.toLocal()}".split(' ')[0]
-                            : "Invalid",
-                        style: TextStyle(
-                          color:
-                              selectedDate != null ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () async {
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate ?? DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedDate = picked;
-                            });
-                          }
-                        },
-                      ),
-                    ],
+              title: Container(
+                margin: EdgeInsets.only(top: 10, left: 8),
+                child: Text(
+                  '${foodList[idx]["name"]}',
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Row(
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: 280,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text("New time: "),
-                      Text(
-                        selectedTime != null
-                            ? selectedTime!.format(context)
-                            : "Not selected (00:00)",
-                        style: TextStyle(
-                          color:
-                              selectedTime != null ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.access_time),
-                        onPressed: () async {
-                          TimeOfDay? picked = await showTimePicker(
-                            context: context,
-                            initialTime:
-                                selectedTime ?? TimeOfDay(hour: 0, minute: 0),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedTime = picked;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Text("Count: "),
-                      IconButton(
-                        icon: const Icon(Icons.remove),
-                        onPressed: () {
-                          if (count > 1) {
-                            setState(() {
-                              count--;
-                              countController.text = count.toString();
-                            });
-                          }
-                        },
-                      ),
-                      SizedBox(
-                        width: 40,
-                        child: TextField(
-                          controller: countController,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          onChanged: (val) {
-                            final parsed = int.tryParse(val);
-                            if (parsed != null && parsed > 0) {
+                      // 보관 상태
+                      Row(
+                        children: [
+                          const Text("Status: "),
+                          const SizedBox(width: 10),
+                          DropdownButton<String>(
+                            value: selectedIsFrozen,
+                            items: isFrozenOptions.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
                               setState(() {
-                                count = parsed;
+                                selectedIsFrozen = newValue!;
                               });
-                            }
-                          },
-                        ),
+                            },
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () {
-                          setState(() {
-                            count++;
-                            countController.text = count.toString();
-                          });
-                        },
+                      Row(
+                        children: [
+                          const Text("Count: "),
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+                            onPressed: () {
+                              if (count > 1) {
+                                setState(() {
+                                  count--;
+                                  countController.text = count.toString();
+                                });
+                              }
+                            },
+                          ),
+                          SizedBox(
+                            width: 40,
+                            child: TextField(
+                              controller: countController,
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              onChanged: (val) {
+                                final parsed = int.tryParse(val);
+                                if (parsed != null && parsed > 0) {
+                                  setState(() {
+                                    count = parsed;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: () {
+                              setState(() {
+                                count++;
+                                countController.text = count.toString();
+                              });
+                            },
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          const Text("New date: "),
+                          Text(
+                            selectedDate != null
+                                ? "${selectedDate!.toLocal()}".split(' ')[0]
+                                : "Invalid",
+                            style: TextStyle(
+                              color:
+                                  selectedDate != null ? Colors.black : Colors.grey,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.calendar_today),
+                            onPressed: () async {
+                              DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDate ?? DateTime.now(),
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  selectedDate = picked;
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Text("New time: "),
+                          Text(
+                            selectedTime != null
+                                ? selectedTime!.format(context)
+                                : "Not selected (00:00)",
+                            style: TextStyle(
+                              color:
+                                  selectedTime != null ? Colors.black : Colors.grey,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.access_time),
+                            onPressed: () async {
+                              TimeOfDay? picked = await showTimePicker(
+                                context: context,
+                                initialTime:
+                                    selectedTime ?? TimeOfDay(hour: 0, minute: 0),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  selectedTime = picked;
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),                      
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  // 보관 상태
-                  Row(
-                    children: [
-                      const Text("Status: "),
-                      const SizedBox(width: 10),
-                      DropdownButton<String>(
-                        value: selectedIsFrozen,
-                        items: isFrozenOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedIsFrozen = newValue!;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
               actions: [
                 TextButton(

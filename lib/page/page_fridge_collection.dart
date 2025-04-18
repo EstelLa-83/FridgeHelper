@@ -86,51 +86,42 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
           mainAxisSize: MainAxisSize.max,
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding:
-                          EdgeInsetsDirectional.fromSTEB(0.0, 12.0, 0.0, 44.0),
-                      child: Wrap(
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        alignment: WrapAlignment.start,
-                        crossAxisAlignment: WrapCrossAlignment.start,
-                        direction: Axis.horizontal,
-                        runAlignment: WrapAlignment.start,
-                        verticalDirection: VerticalDirection.down,
-                        clipBehavior: Clip.none,
-                        children: [
-                          for (int i = 0; i < fridgeList.length; i++)
-                            FridgeCollectionCard(
-                              fridge: fridgeList[i],
-                              routefunc: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                              FridgePage(fridgeId: fridgeList[i].fridgeId),
-                                  ),
-                                );
-                              },
-                              onEdit: () => _showEditFridgeDialog(fridgeList[i]),
-                              onDelete: () => _showDeleteFridgeDialog(fridgeList[i].fridgeId),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: GridView.builder(
+                  itemCount: fridgeList.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, 
+                    crossAxisSpacing: 12.0,
+                    mainAxisSpacing: 12.0,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemBuilder: (context, i) {
+                    return FridgeCollectionCard(
+                      fridge: fridgeList[i],
+                      routefunc: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FridgePage(
+                              fridgeId: fridgeList[i].fridgeId,
+                              fridgeName: fridgeList[i].fridgeName,
                             ),
-                        ],
-                      ),
-                    ),
-                  ],
+                          ),
+                        );
+                      },
+                      onEdit: () => _showEditFridgeDialog(fridgeList[i]),
+                      onDelete: () => _showDeleteFridgeDialog(fridgeList[i].fridgeId),
+                    );
+                  },
                 ),
               ),
             ),
             InkWell(
-              onTap: () => _showCreateFridgeDialog(context),
+              onTap: () => _showAddFridgeDialog(context),
               child: Container(
                 width: double.infinity,
-                height: 100.0,
+                height: 62.0,
                 decoration: BoxDecoration(
                   color: Colors.white,
                 ),
@@ -152,7 +143,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
                   ),
                   child: Padding(
                     padding:
-                        EdgeInsetsDirectional.fromSTEB(0.0, 20.0, 0.0, 44.0),
+                        EdgeInsetsDirectional.fromSTEB(0.0, 12.0, 0.0, 12.0),
                     child: Text(
                       'Make New Fridge',
                       textAlign: TextAlign.center,
@@ -172,19 +163,26 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
     );
   }
 
-  void _showCreateFridgeDialog(BuildContext context) {
+  void _showAddFridgeDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Create New Fridge"),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'Fridge Name: ',
-              hintText: 'Enter fridge name',
+          title: const Text("Add Fridge"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Fridge Name: ',
+                    hintText: 'Enter fridge name',
+                  ),
+                ),
+              ],
             ),
           ),
           actions: [
@@ -239,10 +237,17 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text("Edit Fridge Name"),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'New Name: ',
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'New Name: ',
+                  ),
+                ),
+              ],
             ),
           ),
           actions: [

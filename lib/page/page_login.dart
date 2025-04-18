@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fridge/controller/global.dart';
+import 'package:fridge/controller/auth_service.dart';
 import 'dart:convert';
 
 class LoginPage extends StatefulWidget {
@@ -18,10 +19,14 @@ class _LoginPageState extends State<LoginPage> {
     final id = _idController.text.trim();
     final pw = _pwController.text.trim();
 
-    final response = await http.post(
-      Uri.parse('$BASE_URL/auth/login'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": id, "password": pw}),
+    final response = await authenticatedRequest(
+      context: context,
+      url: Uri.parse('$BASE_URL/auth/login'),
+      method: "POST",
+      body: {
+        "email": id, 
+        "password": pw
+      },
     );
 
     if (response.statusCode == 200) {

@@ -42,8 +42,16 @@ class FridgeFoodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      height: 70,
-      color: const Color(0xffFDFCFF),
+      height: 80,
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xffFDFCFF),
+        border: Border.all(
+          color: Color.fromARGB(255, 243, 243, 243), 
+          width: 1.0,        
+        ),
+        borderRadius: BorderRadius.circular(8.0), 
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -51,7 +59,7 @@ class FridgeFoodCard extends StatelessWidget {
           Flexible(
             flex: 3,
             child: Container(
-              margin: const EdgeInsets.all(5.0),
+              margin: const EdgeInsets.all(10.0),
               child: const Icon(Icons.food_bank_outlined),
             ),
           ),
@@ -60,7 +68,7 @@ class FridgeFoodCard extends StatelessWidget {
             flex: 10,
             child: Container(
               width: 210,
-              margin: const EdgeInsets.only(left: 10, right: 10, top: 20),
+              margin: const EdgeInsets.only(left: 10, right: 10, top: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -68,14 +76,20 @@ class FridgeFoodCard extends StatelessWidget {
                   Text(
                     name,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                   ),
-                  SizedBox(height: 2),
+                  SizedBox(height: 5),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // 갯수
-                      Text('$count'),
+                      Text(
+                        '$count',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                       // 유통기한
                       Text(
                         // 디데이로 표시
@@ -90,20 +104,20 @@ class FridgeFoodCard extends StatelessWidget {
               ),
             ),
           ),
-          // 삭제 버튼
-          Flexible(
-            flex: 2,
-            child: IconButton(
-              icon: const Icon(Icons.delete_outline_rounded),
-              onPressed: onDelete,
-            ),
-          ),
           // 수정 버튼
           Flexible(
             flex: 2,
             child: IconButton(
               icon: const Icon(Icons.create_outlined),
               onPressed: onEdit,
+            ),
+          ),
+          // 삭제 버튼
+          Flexible(
+            flex: 2,
+            child: IconButton(
+              icon: const Icon(Icons.delete_outline_rounded),
+              onPressed: onDelete,
             ),
           ),
         ],
