@@ -7,6 +7,8 @@ import 'package:fridge/controller/auth_service.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 
+import '../service/noti_scheduler.dart';
+
 class FridgePage extends StatefulWidget {
   final int fridgeId;
   final String fridgeName;
@@ -325,6 +327,7 @@ class _FridgePageState extends State<FridgePage> {
                       if (response.statusCode == 201) {
                         Navigator.pop(context);
                         _loadFoodsFromServer();
+                        await syncAllExpiringNotifications();
                       } 
                       else {
                         print("Failed to add food: ${response.statusCode}");
@@ -371,6 +374,7 @@ class _FridgePageState extends State<FridgePage> {
 
     if (response.statusCode == 204) {
       _loadFoodsFromServer();
+      await syncAllExpiringNotifications();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to delete food")),
@@ -574,6 +578,7 @@ class _FridgePageState extends State<FridgePage> {
                       if (response.statusCode == 200) {
                         Navigator.pop(context);
                         _loadFoodsFromServer(); // 다시 가져오기
+                        await syncAllExpiringNotifications();
                       } else {
                         print("Failed to update food: ${response.statusCode}");
                       }
