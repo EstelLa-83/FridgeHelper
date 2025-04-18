@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fridge/widget/fridge/food_card.dart';
 import 'package:fridge/widget/fridge/fridge_appbar.dart';
 import 'package:fridge/widget/fridge/fridge_divider.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:fridge/global.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-late final FlutterSecureStorage storage;
 
 class FridgePage extends StatefulWidget {
   final int fridgeId;
@@ -78,7 +76,6 @@ class _FridgePageState extends State<FridgePage> {
   @override
   void initState() {
     super.initState();
-    storage = const FlutterSecureStorage();
     _loadFoodsFromServer();
   }
 
@@ -114,6 +111,7 @@ class _FridgePageState extends State<FridgePage> {
             ),
             const SizedBox(height: 5),
             const Divider(color: Colors.black26, height: 2),
+            const SizedBox(height: 5),
             FridgeDivider(
               onTypeChanged: (type) {
                 setState(() {
