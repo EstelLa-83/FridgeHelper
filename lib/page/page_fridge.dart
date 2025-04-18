@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fridge/widget/fridge/food_card.dart';
 import 'package:fridge/widget/fridge/fridge_appbar.dart';
 import 'package:fridge/widget/fridge/fridge_divider.dart';
-import 'package:fridge/global.dart';
+import 'package:fridge/controller/global.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
