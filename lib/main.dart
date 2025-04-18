@@ -16,7 +16,6 @@ Future<void> main() async {
   // 앱으로 실행 시 실행 (chrome일 땐 필요 X)
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     tz.initializeTimeZones();
-    await requestExactAlarmPermissionIfNeeded();
     await requestNotificationPermissionIfNeeded();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -38,10 +37,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Fridge',
-      initialRoute: "/login",
+      initialRoute: "/main",
       routes: {
-        '/': (context) => const LoginPage(),
-        '/login': (context) => const LoginPage(),
+        '/': (context) => const MainPage(),
         '/main': (context) => const MainPage(),
       },
     );
