@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:fridge/widget/fridge/food_card.dart';
+import 'package:fridge/widget/fridge/fridge_appbar.dart';
+import 'package:fridge/widget/fridge/fridge_divider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+late final FlutterSecureStorage storage;
 
 class FridgePage extends StatefulWidget {
-  const FridgePage({super.key});
+  final int fridgeId;
+
+  const FridgePage({
+    super.key,
+    required this.fridgeId,
+    });
 
   @override
   State<FridgePage> createState() => _FridgePageState();
@@ -14,22 +25,44 @@ class _FridgePageState extends State<FridgePage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
 
-  List info = [];
+  List foodList = [];
+  List filteredFoodList = [];
+  String selectedStorageType = "ALL";
 
-  void saveFoodInfo(List foodList) async {
-    final prefs = await SharedPreferences.getInstance();
-    String encoded = jsonEncode(foodList); // List<Map> → JSON 문자열
-    await prefs.setString('cached_food_list', encoded);
+  Future<Map<String, String>> buildAuthHeaders() async {
+    final token = await storage.read(key: 'accessToken');
+    return {
+      "Authorization": "Bearer $token",
+      "Content-Type": "application/json",
+    };
   }
 
-  Future<List> loadFoodInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? jsonString = prefs.getString('cached_food_list');
+  Future<void> _loadFoodsFromServer() async {
+    final response = await http.get(
+      Uri.parse("http://localhost:8080/foods?fridgeId=${widget.fridgeId}"),
+      headers: await buildAuthHeaders(),
+    );
 
-    if (jsonString != null) {
-      return jsonDecode(jsonString); // JSON 문자열 → List
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      setState(() {
+        foodList = data;
+        sortByExpiryDate(foodList);
+        getFilteredFoodList();
+      });
     } else {
-      return []; // 없으면 빈 리스트 반환
+      print("Failed to load foods: ${response.statusCode}");
+    }
+  }
+
+  void getFilteredFoodList() {
+    if (selectedStorageType == "ALL") {
+      filteredFoodList = foodList;
+    }
+    else { 
+      filteredFoodList = foodList
+        .where((item) => item["storageType"] == selectedStorageType) 
+        .toList();
     }
   }
 
@@ -42,23 +75,11 @@ class _FridgePageState extends State<FridgePage> {
     });
   }
 
-  void addFood(Map<String, dynamic> food) {
-    setState(() {
-      info.add(food);
-      sortByExpiryDate(info);
-    });
-    saveFoodInfo(info);
-  }
-
   @override
   void initState() {
     super.initState();
-    loadFoodInfo().then((loaded) {
-      sortByExpiryDate(loaded);
-      setState(() {
-        info = loaded;
-      });
-    });
+    storage = const FlutterSecureStorage();
+    _loadFoodsFromServer();
   }
 
   @override
@@ -75,39 +96,46 @@ class _FridgePageState extends State<FridgePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text("Fridge"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              showAddFoodDialog(context);
-            },
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Column(
           children: [
+            FridgeAppBar(),
+            Row(
+              children: [
+                Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    showAddFoodDialog(context);
+                  },
+                ),
+                const SizedBox(width: 8.0),
+              ],
+            ),
             const SizedBox(height: 5),
             const Divider(color: Colors.black26, height: 2),
+            FridgeDivider(
+              onTypeChanged: (type) {
+                setState(() {
+                  selectedStorageType = type;
+                  getFilteredFoodList();
+                });
+              },
+            ),
             const SizedBox(height: 12),
             Expanded(
               child: ListView.separated(
-                itemCount: info.length,
+                itemCount: filteredFoodList.length,
                 itemBuilder: (BuildContext context, int idx) {
-                  print(info[idx]["name"]);
+                  final item = filteredFoodList[idx];
                   return Column(
                     children: <Widget>[
                       FridgeFoodCard(
-                        name: info[idx]["name"],
-                        expiryDate: info[idx]["expiryDate"],
+                        name: item["name"],
+                        count: item["count"],
+                        expiryDate: item["expiryDate"],
                         onDelete: () {
-                          setState(() {
-                            info.removeAt(idx);
-                          });
-                          saveFoodInfo(info);
+                          showDeleteDialog(context, item["id"]);
                         },
                         onEdit: () {
                           showEditDialog(context, idx);
@@ -131,8 +159,12 @@ class _FridgePageState extends State<FridgePage> {
 
   void showAddFoodDialog(BuildContext context) {
     final nameController = TextEditingController();
+    int count = 1;
+    final countController = TextEditingController(text: count.toString());
     DateTime? selectedDate;
     TimeOfDay? selectedTime;
+    String selectedIsFrozen = "COLD";
+    final isFrozenOptions = ["COLD", "FROZEN"];
 
     showDialog(
       context: context,
@@ -147,6 +179,68 @@ class _FridgePageState extends State<FridgePage> {
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(labelText: 'Food Name'),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Text("Count: "),
+                      IconButton(
+                            icon: Icon(Icons.remove),
+                            onPressed: () {
+                              if (count > 1) {
+                                setState(() {
+                                  count--;
+                                  countController.text = count.toString();
+                                });
+                              }
+                            },
+                          ),
+                          SizedBox(
+                            width: 40,
+                            child: TextField(
+                              controller: countController,
+                              textAlign: TextAlign.center,
+                              keyboardType: TextInputType.number,
+                              onChanged: (val) {
+                                final parsed = int.tryParse(val);
+                                if (parsed != null && parsed > 0) {
+                                  setState(() {
+                                    count = parsed;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.add),
+                            onPressed: () {
+                              setState(() {
+                                count++;
+                                countController.text = count.toString();
+                              });
+                            },
+                          ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Text("Status: "),
+                      DropdownButton<String>(
+                        value: selectedIsFrozen,
+                        items: isFrozenOptions.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedIsFrozen = newValue!;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -216,7 +310,7 @@ class _FridgePageState extends State<FridgePage> {
                 ),
                 ElevatedButton(
                   child: const Text('Add'),
-                  onPressed: () {
+                  onPressed: () async {
                     if (nameController.text.isNotEmpty &&
                         selectedDate != null) {
                       final expiryDateTime = DateTime(
@@ -227,11 +321,26 @@ class _FridgePageState extends State<FridgePage> {
                         selectedTime?.minute ?? 0,
                       );
 
-                      addFood({
-                        "name": nameController.text,
-                        "expiryDate": expiryDateTime.toIso8601String(),
-                      });
-                      Navigator.pop(context);
+                      final response = await http.post(
+                        Uri.parse("http://localhost:8080/foods"),
+                        headers: await buildAuthHeaders(),
+                        body: jsonEncode({
+                          "name": nameController.text,
+                          "count": count,
+                          "expiryDate": DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(expiryDateTime),
+                          "memo": "",
+                          "storageType": selectedIsFrozen == "FROZEN" ? "FROZEN" : "COLD",
+                          "fridgeId": widget.fridgeId,
+                        }),
+                      );
+
+                      if (response.statusCode == 201) {
+                        Navigator.pop(context);
+                        _loadFoodsFromServer();
+                      } 
+                      else {
+                        print("Failed to add food: ${response.statusCode}");
+                      }
                     }
                   },
                 ),
@@ -243,9 +352,48 @@ class _FridgePageState extends State<FridgePage> {
     );
   }
 
+  void showDeleteDialog(BuildContext context, int foodId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Food"),
+        content: const Text("Are you sure about deleting this?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final response = await http.delete(
+      Uri.parse("http://localhost:8080/foods/$foodId"),
+      headers: await buildAuthHeaders(),
+    );
+
+    if (response.statusCode == 204) {
+      _loadFoodsFromServer();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to delete food")),
+      );
+    }
+  }
+
   void showEditDialog(BuildContext context, int idx) {
-    DateTime? selectedDate = DateTime.tryParse(info[idx]["expiryDate"]);
+    DateTime? selectedDate = DateTime.tryParse(foodList[idx]["expiryDate"]);
     TimeOfDay? selectedTime;
+    int count = foodList[idx]["count"] ?? 1;
+    final countController = TextEditingController(text: count.toString());
+    String selectedIsFrozen = foodList[idx]["storageType"] == "FROZEN" ? "FROZEN" : "COLD";
+    final isFrozenOptions = ["Cold", "Frozen"];
 
     if (selectedDate != null) {
       selectedTime = TimeOfDay.fromDateTime(selectedDate);
@@ -257,7 +405,7 @@ class _FridgePageState extends State<FridgePage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('"${info[idx]["name"]}"'),
+              title: Text('"${foodList[idx]["name"]}"'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -320,6 +468,69 @@ class _FridgePageState extends State<FridgePage> {
                       ),
                     ],
                   ),
+                  Row(
+                    children: [
+                      const Text("Count: "),
+                      IconButton(
+                        icon: const Icon(Icons.remove),
+                        onPressed: () {
+                          if (count > 1) {
+                            setState(() {
+                              count--;
+                              countController.text = count.toString();
+                            });
+                          }
+                        },
+                      ),
+                      SizedBox(
+                        width: 40,
+                        child: TextField(
+                          controller: countController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          onChanged: (val) {
+                            final parsed = int.tryParse(val);
+                            if (parsed != null && parsed > 0) {
+                              setState(() {
+                                count = parsed;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          setState(() {
+                            count++;
+                            countController.text = count.toString();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // 보관 상태
+                  Row(
+                    children: [
+                      const Text("Status: "),
+                      const SizedBox(width: 10),
+                      DropdownButton<String>(
+                        value: selectedIsFrozen,
+                        items: isFrozenOptions.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedIsFrozen = newValue!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
               actions: [
@@ -329,7 +540,7 @@ class _FridgePageState extends State<FridgePage> {
                 ),
                 ElevatedButton(
                   child: const Text('Save'),
-                  onPressed: () {
+                  onPressed: () async {
                     if (selectedDate != null) {
                       final updatedDateTime = DateTime(
                         selectedDate!.year,
@@ -339,13 +550,27 @@ class _FridgePageState extends State<FridgePage> {
                         selectedTime?.minute ?? 0,
                       );
 
-                      setState(() {
-                        info[idx]["expiryDate"] =
-                            updatedDateTime.toIso8601String();
-                        sortByExpiryDate(info);
-                      });
-                      saveFoodInfo(info);
-                      Navigator.pop(context);
+                      final parsedCount = int.tryParse(countController.text) ?? 1;
+
+                      final response = await http.put(
+                        Uri.parse("http://localhost:8080/foods/${foodList[idx]['id']}"),
+                        headers: await buildAuthHeaders(),
+                        body: jsonEncode({
+                          "name": foodList[idx]['name'],
+                          "count": parsedCount,
+                          "expiryDate":DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(updatedDateTime),
+                          "memo": "",
+                          "storageType": selectedIsFrozen == "FROZEN" ? "FROZEN" : "COLD",
+                          "fridgeId": widget.fridgeId,
+                        }),
+                      );
+
+                      if (response.statusCode == 200) {
+                        Navigator.pop(context);
+                        _loadFoodsFromServer(); // 다시 가져오기
+                      } else {
+                        print("Failed to update food: ${response.statusCode}");
+                      }
                     }
                   },
                 ),

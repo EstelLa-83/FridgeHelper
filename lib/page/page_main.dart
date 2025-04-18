@@ -1,4 +1,4 @@
-import 'package:fridge/page/page_fridge.dart';
+import 'package:fridge/page/page_fridge_collection.dart';
 import 'package:fridge/page/page_setting.dart';
 import 'package:flutter/material.dart';
 
@@ -19,11 +19,11 @@ class _MainPageState extends State<MainPage> {
   int idx = 0;
 
   final pageList = const <Page>[
-    Page(Icons.home_filled, "fridge"),
+    Page(Icons.home_filled, "fridgeCollection"),
     Page(Icons.person, "setting"),
   ];
 
-  final _buildBody = <Widget>[FridgePage(), SettingPage()];
+  final _buildBody = <Widget>[FridgeCollectionPage(), SettingPage()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(

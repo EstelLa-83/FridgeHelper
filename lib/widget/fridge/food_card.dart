@@ -4,11 +4,13 @@ class FridgeFoodCard extends StatelessWidget {
   const FridgeFoodCard({
     super.key,
     required this.name,
+    required this.count,
     required this.expiryDate,
     required this.onDelete,
     required this.onEdit,
   });
   final String name;
+  final int count;
   final String expiryDate;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
@@ -65,18 +67,24 @@ class FridgeFoodCard extends StatelessWidget {
                   // 식품명
                   Text(
                     name,
-                    textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                   ),
                   SizedBox(height: 2),
-                  // 유통기한
-                  Text(
-                    // 디데이로 표시
-                    getDdayLabel(expiryDate),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // 갯수
+                      Text('$count'),
+                      // 유통기한
+                      Text(
+                        // 디데이로 표시
+                        getDdayLabel(expiryDate),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 15),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -85,21 +93,17 @@ class FridgeFoodCard extends StatelessWidget {
           // 삭제 버튼
           Flexible(
             flex: 2,
-            child: Container(
-              child: IconButton(
-                icon: const Icon(Icons.delete_outline_rounded),
-                onPressed: onDelete,
-              ),
+            child: IconButton(
+              icon: const Icon(Icons.delete_outline_rounded),
+              onPressed: onDelete,
             ),
           ),
           // 수정 버튼
           Flexible(
             flex: 2,
-            child: Container(
-              child: IconButton(
-                icon: const Icon(Icons.create_outlined),
-                onPressed: onEdit,
-              ),
+            child: IconButton(
+              icon: const Icon(Icons.create_outlined),
+              onPressed: onEdit,
             ),
           ),
         ],
