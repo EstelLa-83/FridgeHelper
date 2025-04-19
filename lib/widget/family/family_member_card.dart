@@ -39,7 +39,6 @@ class MemberCard extends StatelessWidget {
             children: [
               // 프로필 이미지 
               ClipOval(
-                //borderRadius: BorderRadius.circular(18.0),
                 child: Image.asset(
                   profileImages[profile],
                   errorBuilder: (context, error, stackTrace) => const Icon(Icons.person),
