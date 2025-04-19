@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fridge/controller/profiles.dart';
+import 'package:fridge/controller/profileImages.dart';
 
 class MemberCard extends StatelessWidget {
   final String name;
