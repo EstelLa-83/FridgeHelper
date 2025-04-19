@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fridge/controller/global.dart';
 import 'package:fridge/controller/auth_service.dart';
+import 'package:fridge/controller/profiles.dart';
 
 class ProfileEditPage extends StatefulWidget {
   const ProfileEditPage({super.key});
@@ -13,20 +14,8 @@ class ProfileEditPage extends StatefulWidget {
 class _ProfileEditPageState extends State<ProfileEditPage> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
+  late int profile;
   bool isEditingName = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserInfo();
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    super.dispose();
-  }
 
   Future<void> _loadUserInfo() async {
     final response = await authenticatedRequest(
@@ -40,6 +29,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       setState(() {
         nameController.text = data['userName'];
         emailController.text = data['email'];
+        profile = data['userProfile'];
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,6 +58,189 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         const SnackBar(content: Text('Failed to update name')),
       );
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (onServer) {
+      _loadUserInfo();
+    }
+    else {
+      profile = 1;
+    }
+    
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Edit Profile")
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                // Profile Image
+                Container(
+                  margin: const EdgeInsets.only(bottom: 24), // 원하는 마진 테두리 안쪽 여백
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.lightBlueAccent, width: 2), // 테두리
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        spreadRadius: 5,
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      profileImages[profile],
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 100),
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                // 수정 버튼
+                Positioned(
+                  bottom: 28,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () => _showProfileImagePicker(context),
+                    child: Container(
+                    width:36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 20,
+                          spreadRadius: 3,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.edit,
+                        size: 25,
+                        color: Colors.grey,
+                    ),
+                    ),
+                  ),
+                  ),
+                ),
+              ],
+            ),
+            _buildRoundedField(
+              controller: nameController,
+              label: 'Name',
+              readOnly: !isEditingName,
+              suffixIcon: isEditingName
+                  ? IconButton(
+                icon: const Icon(Icons.check),
+                onPressed: _submitNameChange,
+              )
+                  : IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => setState(() => isEditingName = true),
+              ),
+            ),
+            _buildRoundedField(
+              controller: emailController,
+              label: 'Email',
+              readOnly: true,
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _showChangePasswordDialog,
+              child: const Text('Change Password'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showProfileImagePicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: 400,
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: profileImages.length,
+            itemBuilder: (context, index) {
+              final imagePath = profileImages[index];
+              return GestureDetector(
+                onTap: () async {
+                  final response = await authenticatedRequest(
+                    context: context,
+                    url: Uri.parse('$BASE_URL/users/profile'),
+                    method: 'PUT',
+                    body: {
+                      'userProfile': index,
+                    },
+                  );
+
+                  if (response.statusCode == 200) {
+                    setState(() {
+                      profile = index;
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Profile Image updated successfully')),
+                    );
+                  } 
+                  else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to update profile image')),
+                    );
+                  }
+
+                  Navigator.pop(context);
+                },
+                child: ClipOval(
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: 100,
+                    height: 100,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   void _showChangePasswordDialog() {
@@ -256,44 +429,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           labelText: label,
           border: InputBorder.none,
           suffixIcon: suffixIcon,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Edit Profile")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildRoundedField(
-              controller: nameController,
-              label: 'Name',
-              readOnly: !isEditingName,
-              suffixIcon: isEditingName
-                  ? IconButton(
-                icon: const Icon(Icons.check),
-                onPressed: _submitNameChange,
-              )
-                  : IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () => setState(() => isEditingName = true),
-              ),
-            ),
-            _buildRoundedField(
-              controller: emailController,
-              label: 'Email',
-              readOnly: true,
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _showChangePasswordDialog,
-              child: const Text('Change Password'),
-            ),
-          ],
         ),
       ),
     );

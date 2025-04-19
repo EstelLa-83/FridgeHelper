@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:fridge/page/page_profile.dart';
 import 'package:fridge/service/noti_scheduler.dart';
 import 'package:fridge/service/notification_service.dart';
+import 'package:fridge/controller/auth_service.dart';
 import 'package:fridge/controller/global.dart';
-import 'package:http/http.dart' as http;
 import 'package:dropdown_button2/dropdown_button2.dart';
 
 class SettingPage extends StatefulWidget {
@@ -43,14 +44,11 @@ class _FridgePageState extends State<SettingPage> {
   }
 
   Future<void> logout(BuildContext context) async {
-    final accessToken = await storage.read(key: 'accessToken');
-
-    await http.post(
-      Uri.parse('$BASE_URL/auth/logout'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
+    await authenticatedRequest(
+      context: context,
+      url: Uri.parse('$BASE_URL/auth/logout'),
+      method: "POST",
+      body: {},
     );
 
     await storage.deleteAll();
@@ -83,7 +81,12 @@ class _FridgePageState extends State<SettingPage> {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.pushNamed(context, '/profile-edit');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileEditPage(),
+                  ),
+                );
               },
               child: Container(
                 width: double.infinity,
