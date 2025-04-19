@@ -1,6 +1,7 @@
 import 'package:fridge/page/page_fridge_collection.dart';
 import 'package:fridge/page/page_family.dart';
 import 'package:fridge/page/page_setting.dart';
+import 'package:fridge/controller/global.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends StatefulWidget {
@@ -30,6 +31,15 @@ class _MainPageState extends State<MainPage> {
     FamilyPage(),
     SettingPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (!onServer) {
+      _setTmpValue();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,5 +69,9 @@ class _MainPageState extends State<MainPage> {
       ),
       body: _buildBody[idx],
     );
+  }
+
+  void _setTmpValue() {
+    idx = 1;
   }
 }
