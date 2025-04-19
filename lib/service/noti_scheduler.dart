@@ -23,7 +23,6 @@ Future<List<Map<String, dynamic>>> fetchFoodsFromServer(String accessToken) asyn
   }
 }
 
-
 Future<void> syncAllExpiringNotifications() async {
   final settings = await loadNotificationSettings();
   if (!settings.enabled) {
@@ -41,10 +40,11 @@ Future<void> syncAllExpiringNotifications() async {
     final rawFoods = await fetchFoodsFromServer(accessToken);
 
     final List<Food> foodList = rawFoods.map((f) => Food(
+      foodId: f["id"],
       name: f["name"],
-      date: DateTime.parse(f["expiryDate"]),
+      expiryDate: DateTime.parse(f["expiryDate"]),
       count: f["count"],
-      isFrozen: f["storageType"],
+      storageType: f["storageType"],
     )).toList();
 
     await scheduleGroupedNotifications(foodList);
@@ -69,12 +69,12 @@ Future<void> scheduleGroupedNotifications(List<Food> foodList) async {
 
   for (final food in foodList) {
     // 이미 유통기한 지난 상품은 무시
-    if (food.date.isBefore(now)) continue;
+    if (food.expiryDate.isBefore(now)) continue;
 
     final alarmTime = DateTime(
-      food.date.year,
-      food.date.month,
-      food.date.day - settings.daysBefore,
+      food.expiryDate.year,
+      food.expiryDate.month,
+      food.expiryDate.day - settings.daysBefore,
       settings.hour,
     );
 
@@ -107,8 +107,6 @@ Future<void> scheduleGroupedNotifications(List<Food> foodList) async {
     );
   }
 }
-
-
 
 /// 테스트용 알림 예약: 현재 시각 기준 10초 뒤 알림 울리기
 Future<void> showTestNotification() async {

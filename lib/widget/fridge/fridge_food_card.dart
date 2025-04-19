@@ -9,15 +9,15 @@ class FridgeFoodCard extends StatelessWidget {
     required this.onDelete,
     required this.onEdit,
   });
+
   final String name;
   final int count;
-  final String expiryDate;
+  final DateTime expiryDate;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
 
-  String getDdayLabel(String expiryDateStr) {
+  String getDdayLabel(DateTime expiryDate) {
     try {
-      DateTime expiryDate = DateTime.parse(expiryDateStr);
       DateTime today = DateTime.now();
       // 날짜 차이 계산 (시간 차이 무시, 날짜만 비교)
       Duration diff = expiryDate.difference(
@@ -53,18 +53,14 @@ class FridgeFoodCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0), 
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // 아이콘
-          Flexible(
-            flex: 3,
-            child: Container(
-              margin: const EdgeInsets.all(10.0),
-              child: const Icon(Icons.food_bank_outlined),
-            ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: const Icon(Icons.food_bank_outlined),
           ),
           // 텍스트
-          Flexible(
+          Expanded(
             flex: 10,
             child: Container(
               width: 210,
@@ -105,20 +101,14 @@ class FridgeFoodCard extends StatelessWidget {
             ),
           ),
           // 수정 버튼
-          Flexible(
-            flex: 2,
-            child: IconButton(
-              icon: const Icon(Icons.create_outlined),
-              onPressed: onEdit,
-            ),
+          IconButton(
+            icon: const Icon(Icons.create_outlined),
+            onPressed: onEdit,
           ),
           // 삭제 버튼
-          Flexible(
-            flex: 2,
-            child: IconButton(
-              icon: const Icon(Icons.delete_outline_rounded),
-              onPressed: onDelete,
-            ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded),
+            onPressed: onDelete,
           ),
         ],
       ),
