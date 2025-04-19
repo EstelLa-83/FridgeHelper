@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fridge/service/noti_scheduler.dart';
 import 'package:fridge/service/notification_service.dart';
-import 'dart:convert';
-import 'package:fridge/model/food.dart';
 import 'package:fridge/controller/global.dart';
 import 'package:http/http.dart' as http;
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -48,7 +45,7 @@ class _FridgePageState extends State<SettingPage> {
   Future<void> logout(BuildContext context) async {
     final accessToken = await storage.read(key: 'accessToken');
 
-    final response = await http.post(
+    await http.post(
       Uri.parse('$BASE_URL/auth/logout'),
       headers: {
         'Authorization': 'Bearer $accessToken',

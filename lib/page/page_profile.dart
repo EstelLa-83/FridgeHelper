@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fridge/controller/global.dart';
-import 'package:http/http.dart' as http;
-import '../controller/auth_service.dart';
+import 'package:fridge/controller/auth_service.dart';
 
 class ProfileEditPage extends StatefulWidget {
   const ProfileEditPage({super.key});

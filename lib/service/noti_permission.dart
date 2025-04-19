@@ -1,7 +1,4 @@
-import 'dart:io';
-import 'package:android_intent_plus/android_intent.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> requestNotificationPermissionIfNeeded() async {
   final status = await Permission.notification.status;
