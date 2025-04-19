@@ -5,14 +5,12 @@ class MemberCard extends StatelessWidget {
   final String name;
   final String profile;
   final bool isMe;
-  final VoidCallback onDelete;
 
   const MemberCard({
     super.key,
     required this.name,
     required this.profile,
-    this.isMe = false,
-    required this.onDelete,    
+    this.isMe = false,   
   });
 
   @override
@@ -65,15 +63,6 @@ class MemberCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 5.0),
-              // 삭제 버튼
-              Flexible(
-                flex: 2,
-                child: IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  onPressed: onDelete,
                 ),
               ),
             ],
