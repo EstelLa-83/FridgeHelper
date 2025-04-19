@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:fridge/controller/global.dart';
+import 'package:fridge/controller/profiles.dart';
 
 class MemberCard extends StatelessWidget {
   final String name;
-  final String profile;
+  final int profile;
   final bool isMe;
 
   const MemberCard({
@@ -41,7 +41,7 @@ class MemberCard extends StatelessWidget {
               ClipOval(
                 //borderRadius: BorderRadius.circular(18.0),
                 child: Image.asset(
-                  '$BASE_IMAGE/$profile.JPG',
+                  profileImages[profile],
                   errorBuilder: (context, error, stackTrace) => const Icon(Icons.person),
                   width: 45,
                   height: 45,

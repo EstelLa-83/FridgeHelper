@@ -1,7 +1,7 @@
 class Member {
   int memberId;
   String memberName;
-  String memberProfile;
+  int memberProfile;
 
   Member({
     required this.memberId,

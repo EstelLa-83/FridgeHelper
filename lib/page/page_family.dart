@@ -395,9 +395,9 @@ class _FamilyPageState extends State<FamilyPage> {
     familyId = 0;
     familyName = "Alice's family";
     memberList = [
-      Member(memberId: 0, memberName: 'Alice', memberProfile: 'profile_1'),
-      Member(memberId: 1, memberName: 'Bob', memberProfile: 'profile_2'),
-      Member(memberId: 2, memberName: 'Charlie', memberProfile: 'profile_3'),
+      Member(memberId: 0, memberName: 'Alice', memberProfile: 0),
+      Member(memberId: 1, memberName: 'Bob', memberProfile: 1),
+      Member(memberId: 2, memberName: 'Charlie', memberProfile: 2),
     ];
   }
 }
