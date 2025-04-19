@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:fridge/widget/fridge/food_card.dart';
+import 'package:fridge/model/food.dart';
+import 'package:fridge/widget/fridge/fridge_food_card.dart';
 import 'package:fridge/widget/fridge/fridge_appbar.dart';
 import 'package:fridge/widget/fridge/fridge_divider.dart';
 import 'package:fridge/controller/global.dart';
 import 'package:fridge/controller/auth_service.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-
-import '../service/noti_scheduler.dart';
 
 class FridgePage extends StatefulWidget {
   final int fridgeId;
@@ -27,8 +26,8 @@ class _FridgePageState extends State<FridgePage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
 
-  List foodList = [];
-  List filteredFoodList = [];
+  List<Food> foodList = [];
+  List<Food> filteredFoodList = [];
   String selectedStorageType = "ALL";
 
   Future<void> _loadFoodsFromServer() async {
@@ -40,8 +39,19 @@ class _FridgePageState extends State<FridgePage> {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      final List<Food> fetchedFoods = data.map((item) {
+        return Food(
+          foodId: item['id'],
+          name: item['name'],
+          count: item['count'],
+          expiryDate: DateTime.parse(item['expiryDate']),
+          storageType: item['storageType'],
+        );
+      }).toList();
+
       setState(() {
-        foodList = data;
+        foodList = fetchedFoods;
         sortByExpiryDate(foodList);
         getFilteredFoodList();
       });
@@ -56,17 +66,14 @@ class _FridgePageState extends State<FridgePage> {
     }
     else { 
       filteredFoodList = foodList
-        .where((item) => item["storageType"] == selectedStorageType) 
+        .where((item) => item.storageType == selectedStorageType) 
         .toList();
     }
   }
 
-  void sortByExpiryDate(List list) {
+  void sortByExpiryDate(List<Food> list) {
     list.sort((a, b) {
-      final dateA = DateTime.tryParse(a["expiryDate"]);
-      final dateB = DateTime.tryParse(b["expiryDate"]);
-      if (dateA == null || dateB == null) return 0;
-      return dateA.compareTo(dateB);
+      return a.expiryDate.compareTo(b.expiryDate);
     });
   }
 
@@ -97,7 +104,7 @@ class _FridgePageState extends State<FridgePage> {
               fridgeName: widget.fridgeName,
               onAddPressed: () => showAddFoodDialog(context),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 5),
             FridgeDivider(
               onTypeChanged: (type) {
                 setState(() {
@@ -115,11 +122,11 @@ class _FridgePageState extends State<FridgePage> {
                   return Column(
                     children: <Widget>[
                       FridgeFoodCard(
-                        name: item["name"],
-                        count: item["count"],
-                        expiryDate: item["expiryDate"],
+                        name: item.name,
+                        count: item.count,
+                        expiryDate: item.expiryDate,
                         onDelete: () {
-                          showDeleteDialog(context, item["id"]);
+                          showDeleteDialog(context, item.foodId);
                         },
                         onEdit: () {
                           showEditDialog(context, idx);
@@ -147,8 +154,8 @@ class _FridgePageState extends State<FridgePage> {
     final countController = TextEditingController(text: count.toString());
     DateTime? selectedDate;
     TimeOfDay? selectedTime;
-    String selectedIsFrozen = "COLD";
-    final isFrozenOptions = ["COLD", "FROZEN"];
+    String selectedStorageType = "COLD";
+    final storageTypeOptions = ["COLD", "FROZEN"];
 
     showDialog(
       context: context,
@@ -214,8 +221,8 @@ class _FridgePageState extends State<FridgePage> {
                         children: [
                           const Text("Status: "),
                           DropdownButton<String>(
-                            value: selectedIsFrozen,
-                            items: isFrozenOptions.map((String value) {
+                            value: selectedStorageType,
+                            items: storageTypeOptions.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
                                 child: Text(value),
@@ -223,7 +230,7 @@ class _FridgePageState extends State<FridgePage> {
                             }).toList(),
                             onChanged: (String? newValue) {
                               setState(() {
-                                selectedIsFrozen = newValue!;
+                                selectedStorageType = newValue!;
                               });
                             },
                           ),
@@ -319,7 +326,7 @@ class _FridgePageState extends State<FridgePage> {
                           "count": count,
                           "expiryDate": DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(expiryDateTime),
                           "memo": "",
-                          "storageType": selectedIsFrozen == "FROZEN" ? "FROZEN" : "COLD",
+                          "storageType": selectedStorageType == "FROZEN" ? "FROZEN" : "COLD",
                           "fridgeId": widget.fridgeId,
                         },
                       );
@@ -327,7 +334,6 @@ class _FridgePageState extends State<FridgePage> {
                       if (response.statusCode == 201) {
                         Navigator.pop(context);
                         _loadFoodsFromServer();
-                        await syncAllExpiringNotifications();
                       } 
                       else {
                         print("Failed to add food: ${response.statusCode}");
@@ -346,7 +352,7 @@ class _FridgePageState extends State<FridgePage> {
   }
 
   void showDeleteDialog(BuildContext context, int foodId) async {
-    final confirm = await showDialog<bool>(
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Delete Food"),
@@ -356,43 +362,41 @@ class _FridgePageState extends State<FridgePage> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text("Cancel"),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
+          ElevatedButton(
+            onPressed: () async {
+              final response = await authenticatedRequest(
+                context: context,
+                url: Uri.parse("$BASE_URL/foods/$foodId"),
+                method: "DELETE",
+              );
+              
+              if (response.statusCode == 204) {
+                Navigator.pop(context);
+                _loadFoodsFromServer();
+              } 
+              else {
+                print("Failed to delete food: ${response.statusCode}");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Failed to delete food")),
+                );
+              }
+            },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            
           ),
         ],
       ),
     );
-
-    if (confirm != true) return;
-
-    final response = await authenticatedRequest(
-      context: context,
-      url: Uri.parse("$BASE_URL/foods/$foodId"),
-      method: "DELETE",
-    );
-
-    if (response.statusCode == 204) {
-      _loadFoodsFromServer();
-      await syncAllExpiringNotifications();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to delete food")),
-      );
-    }
   }
 
   void showEditDialog(BuildContext context, int idx) {
-    DateTime? selectedDate = DateTime.tryParse(foodList[idx]["expiryDate"]);
-    TimeOfDay? selectedTime;
-    int count = foodList[idx]["count"] ?? 1;
+    final Food targetFood = filteredFoodList[idx];
+    DateTime selectedDate = targetFood.expiryDate;
+    TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
+    int count = targetFood.count;
     final countController = TextEditingController(text: count.toString());
-    String selectedIsFrozen = foodList[idx]["storageType"] == "FROZEN" ? "FROZEN" : "COLD";
-    final isFrozenOptions = ["COLD", "FROZEN"];
-
-    if (selectedDate != null) {
-      selectedTime = TimeOfDay.fromDateTime(selectedDate);
-    }
+    String selectedStorageType = targetFood.storageType == "FROZEN" ? "FROZEN" : "COLD";
+    final storageTypeOptions = ["COLD", "FROZEN"];
 
     showDialog(
       context: context,
@@ -403,7 +407,7 @@ class _FridgePageState extends State<FridgePage> {
               title: Container(
                 margin: EdgeInsets.only(top: 10, left: 8),
                 child: Text(
-                  '${foodList[idx]["name"]}',
+                  targetFood.name,
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
@@ -422,8 +426,8 @@ class _FridgePageState extends State<FridgePage> {
                           const Text("Status: "),
                           const SizedBox(width: 10),
                           DropdownButton<String>(
-                            value: selectedIsFrozen,
-                            items: isFrozenOptions.map((String value) {
+                            value: selectedStorageType,
+                            items: storageTypeOptions.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
                                 child: Text(value),
@@ -431,7 +435,7 @@ class _FridgePageState extends State<FridgePage> {
                             }).toList(),
                             onChanged: (String? newValue) {
                               setState(() {
-                                selectedIsFrozen = newValue!;
+                                selectedStorageType = newValue!;
                               });
                             },
                           ),
@@ -483,12 +487,9 @@ class _FridgePageState extends State<FridgePage> {
                         children: [
                           const Text("New date: "),
                           Text(
-                            selectedDate != null
-                                ? "${selectedDate!.toLocal()}".split(' ')[0]
-                                : "Invalid",
+                            DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(selectedDate),
                             style: TextStyle(
-                              color:
-                                  selectedDate != null ? Colors.black : Colors.grey,
+                              color: Colors.black,
                             ),
                           ),
                           IconButton(
@@ -496,7 +497,7 @@ class _FridgePageState extends State<FridgePage> {
                             onPressed: () async {
                               DateTime? picked = await showDatePicker(
                                 context: context,
-                                initialDate: selectedDate ?? DateTime.now(),
+                                initialDate: selectedDate,
                                 firstDate: DateTime(2020),
                                 lastDate: DateTime(2100),
                               );
@@ -513,12 +514,9 @@ class _FridgePageState extends State<FridgePage> {
                         children: [
                           const Text("New time: "),
                           Text(
-                            selectedTime != null
-                                ? selectedTime!.format(context)
-                                : "Not selected (00:00)",
+                            selectedTime.format(context),
                             style: TextStyle(
-                              color:
-                                  selectedTime != null ? Colors.black : Colors.grey,
+                              color: Colors.black,
                             ),
                           ),
                           IconButton(
@@ -526,8 +524,7 @@ class _FridgePageState extends State<FridgePage> {
                             onPressed: () async {
                               TimeOfDay? picked = await showTimePicker(
                                 context: context,
-                                initialTime:
-                                    selectedTime ?? TimeOfDay(hour: 0, minute: 0),
+                                initialTime: selectedTime,
                               );
                               if (picked != null) {
                                 setState(() {
@@ -550,38 +547,38 @@ class _FridgePageState extends State<FridgePage> {
                 ElevatedButton(
                   child: const Text('Save'),
                   onPressed: () async {
-                    if (selectedDate != null) {
-                      final updatedDateTime = DateTime(
-                        selectedDate!.year,
-                        selectedDate!.month,
-                        selectedDate!.day,
-                        selectedTime?.hour ?? 0,
-                        selectedTime?.minute ?? 0,
+                    final parsedCount = int.tryParse(countController.text) ?? 1;
+
+                    final selectedDateTime = DateTime(
+                      selectedDate.year,
+                      selectedDate.month,
+                      selectedDate.day,
+                      selectedTime.hour,
+                      selectedTime.minute,
+                    );
+
+                    final response = await authenticatedRequest(
+                      context: context,
+                      url: Uri.parse("$BASE_URL/foods/${targetFood.foodId}"),
+                      method: "PUT",
+                      body: {
+                        "name": targetFood.name,
+                        "count": parsedCount,
+                        "expiryDate":DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(selectedDateTime),
+                        "memo": "",
+                        "storageType": selectedStorageType == "FROZEN" ? "FROZEN" : "COLD",
+                        "fridgeId": widget.fridgeId,
+                      },
+                    );
+
+                    if (response.statusCode == 200) {
+                      Navigator.pop(context);
+                      _loadFoodsFromServer(); // 다시 가져오기
+                    } else {
+                      print("Failed to update food: ${response.statusCode}");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Failed to edit food")),
                       );
-
-                      final parsedCount = int.tryParse(countController.text) ?? 1;
-
-                      final response = await authenticatedRequest(
-                        context: context,
-                        url: Uri.parse("$BASE_URL/foods/${foodList[idx]['id']}"),
-                        method: "PUT",
-                        body: {
-                          "name": foodList[idx]['name'],
-                          "count": parsedCount,
-                          "expiryDate":DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(updatedDateTime),
-                          "memo": "",
-                          "storageType": selectedIsFrozen == "FROZEN" ? "FROZEN" : "COLD",
-                          "fridgeId": widget.fridgeId,
-                        },
-                      );
-
-                      if (response.statusCode == 200) {
-                        Navigator.pop(context);
-                        _loadFoodsFromServer(); // 다시 가져오기
-                        await syncAllExpiringNotifications();
-                      } else {
-                        print("Failed to update food: ${response.statusCode}");
-                      }
                     }
                   },
                 ),
