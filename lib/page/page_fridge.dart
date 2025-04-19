@@ -371,8 +371,8 @@ class _FridgePageState extends State<FridgePage> {
               );
               
               if (response.statusCode == 204) {
-                Navigator.pop(context);
                 _loadFoodsFromServer();
+                Navigator.pop(context);
               } 
               else {
                 print("Failed to delete food: ${response.statusCode}");
@@ -382,7 +382,6 @@ class _FridgePageState extends State<FridgePage> {
               }
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
-            
           ),
         ],
       ),
