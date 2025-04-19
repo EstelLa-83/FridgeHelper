@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fridge/model/member.dart';
 import 'package:fridge/widget/family/family_member_card.dart';
+import 'package:fridge/widget/family/family_appbar.dart';
 import 'package:fridge/controller/global.dart';
 import 'package:fridge/controller/auth_service.dart';
 import 'dart:convert';
@@ -99,20 +100,13 @@ class _FamilyPageState extends State<FamilyPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(familyName),
-        centerTitle: true,
-        elevation: 2.0,
-      ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
         child: Column(
           children: [
+            FamilyAppBar(
+              familyName: familyName, 
+              onRename: () => _showRenameDialog(context)),
             const SizedBox(height: 10.0),
             Expanded(
               child: ListView.builder(
@@ -157,6 +151,87 @@ class _FamilyPageState extends State<FamilyPage> {
       ),
     );
   }
+
+  void _showRenameDialog(BuildContext context) {
+    final TextEditingController _nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Rename to ...'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: 'Family name'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final name = _nameController.text.trim();
+                    if (name.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a Family name')),
+                      );
+
+                      return;
+                    } 
+
+                    final response = await authenticatedRequest(
+                      context: context, 
+                      url: Uri.parse('$BASE_URL/family-groups/name'), 
+                      method: 'PUT',
+                      body: {
+                        "name": name,
+                      },
+                    );
+
+                    if (response.statusCode != 200) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please check a Family name')),
+                      );
+                    }
+                    
+                    if (response.statusCode == 200) {
+                      setState(() {
+                        familyName = name;
+                      });
+
+                      print('Rename to $name');
+                      Navigator.pop(context);
+                    }
+                    else {
+                      print("Failed to rename: ${response.statusCode}");
+                    }
+                  },
+                  child: const Text('Ok'),
+                ),
+              ],
+            );
+          }
+        );      
+      },
+    );
+  }    
+
 
   void _showLeaveDialog(BuildContext context) async {
     showDialog(
@@ -213,13 +288,6 @@ class _FamilyPageState extends State<FamilyPage> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
-                          'ID: ',
-                          style: TextStyle(
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 8.0),
                         Expanded(
                           child: TextField(
                             controller: _idController,

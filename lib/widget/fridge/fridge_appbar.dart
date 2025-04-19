@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class FridgeAppBar extends StatelessWidget {
   final String fridgeName;
   final VoidCallback onAddPressed;
@@ -38,7 +39,7 @@ class FridgeAppBar extends StatelessWidget {
                 child: Text(
                   fridgeName,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
