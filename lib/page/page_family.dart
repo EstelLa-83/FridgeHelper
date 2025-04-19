@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fridge/model/member.dart';
-import 'package:fridge/widget/family/member_card.dart';
+import 'package:fridge/widget/family/family_member_card.dart';
 import 'package:fridge/controller/global.dart';
 import 'package:fridge/controller/auth_service.dart';
 import 'dart:convert';
@@ -21,13 +21,6 @@ class _FamilyPageState extends State<FamilyPage> {
   late String familyName;
 
   Future<void> _loadInfoFromServer() async {
-    final token = await storage.read(key: 'accessToken');
-
-    if (token == null) {
-      print("Access token not found");
-      return;
-    }
-
     final response = await authenticatedRequest(
       context: context,
       url: Uri.parse("$BASE_URL/users/me"),
@@ -85,8 +78,13 @@ class _FamilyPageState extends State<FamilyPage> {
   @override
   void initState() {
     super.initState();
-    _loadInfoFromServer();
-    _loadFamilyFromServer();
+    if (onServer) {
+      _loadInfoFromServer();
+      _loadFamilyFromServer();
+    }
+    else {
+      _setTmpValue(); 
+    }
   }
 
   @override
@@ -115,6 +113,7 @@ class _FamilyPageState extends State<FamilyPage> {
         onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
         child: Column(
           children: [
+            const SizedBox(height: 10.0),
             Expanded(
               child: ListView.builder(
                 itemCount: memberList.length,
@@ -129,9 +128,9 @@ class _FamilyPageState extends State<FamilyPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(bottom: 25.0),
+              padding: const EdgeInsets.only(bottom: 15.0),
               child: SizedBox(
-                width: 230.0,
+                width: 280.0,
                 height: 50.0,
                 child: ElevatedButton(
                   onPressed: () {
@@ -144,7 +143,7 @@ class _FamilyPageState extends State<FamilyPage> {
                     ),
                   ),
                   child: const Text(
-                    'Invite Family Members',
+                    'Invite new Family Members',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16.0,
@@ -159,8 +158,8 @@ class _FamilyPageState extends State<FamilyPage> {
     );
   }
 
-  void _showDeleteDialog(BuildContext context) async {
-    final confirm = await showDialog<bool>(
+  void _showLeaveDialog(BuildContext context) async {
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Leave from family"),
@@ -320,5 +319,17 @@ class _FamilyPageState extends State<FamilyPage> {
         );      
       },
     );
-  }  
+  }
+
+  void _setTmpValue() {
+    myId = 0;
+    myName = 'Alice';
+    familyId = 0;
+    familyName = "Alice's family";
+    memberList = [
+      Member(memberId: 0, memberName: 'Alice', memberProfile: 'profile_1'),
+      Member(memberId: 1, memberName: 'Bob', memberProfile: 'profile_2'),
+      Member(memberId: 2, memberName: 'Charlie', memberProfile: 'profile_3'),
+    ];
+  }
 }
