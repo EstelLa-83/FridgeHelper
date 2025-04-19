@@ -20,13 +20,6 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
   List<Fridge> fridgeList = [];
 
   Future<void> _loadFridgesFromServer() async {
-    final token = await storage.read(key: 'accessToken');
-
-    if (token == null) {
-      print("Access token not found");
-      return;
-    }
-
     final response = await authenticatedRequest(
       context: context,
       url: Uri.parse("$BASE_URL/users/me"),
@@ -198,14 +191,6 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
                 final name = nameController.text.trim();
                 if (name.isEmpty) return;
 
-                final token = await storage.read(key: 'accessToken');
-                if (token == null)
-                {
-                  print("Token not found");
-                  Navigator.pop(context);
-                  return;
-                }
-
                 final response = await authenticatedRequest(
                   context: context,
                   url: Uri.parse("$BASE_URL/fridges?name=$name"),
@@ -267,13 +252,6 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
                   return;
                 }
 
-                final token = await storage.read(key: 'accessToken');
-                if (token == null) {
-                  print("Token not found");
-                  Navigator.pop(context);
-                  return;
-                }
-
                 final response = await authenticatedRequest(
                   context: context,
                   url: Uri.parse("$BASE_URL/fridges/${fridge.fridgeId}"),
@@ -303,8 +281,6 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
   }
 
   void _showDeleteFridgeDialog(int fridgeId) async {
-    final token = await storage.read(key: 'accessToken');
-    if (token == null) return;
 
     final confirm = await showDialog<bool>(
       context: context,
