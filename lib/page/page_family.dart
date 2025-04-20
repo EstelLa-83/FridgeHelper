@@ -16,12 +16,12 @@ class FamilyPage extends StatefulWidget {
 class _FamilyPageState extends State<FamilyPage> {
   final _unfocusNode = FocusNode();
   List<Member> memberList = [];
-  late int myId;
-  late String myName;
-  late int familyId;
-  late String familyName;
+  int myId = 0;
+  String myName = "";
+  int familyId = 0;
+  String familyName = "";
 
-  Future<void> _loadInfoFromServer() async {
+  Future<void> _loadMyInfoFromServer() async {
     final response = await authenticatedRequest(
       context: context,
       url: Uri.parse("$BASE_URL/users/me"),
@@ -35,6 +35,25 @@ class _FamilyPageState extends State<FamilyPage> {
       setState(() {
         myId = data['userId'];
         myName = data['userName'];
+      });
+    } 
+    else {
+      print("Failed to load myInfo: ${response.statusCode}");
+    }
+  }
+
+  Future<void> _loadFamilyInfoFromServer() async {
+    final response = await authenticatedRequest(
+      context: context,
+      url: Uri.parse("$BASE_URL/users/me"),
+      method: "GET",
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (!mounted) return;
+      setState(() {
         familyId = data['familyGroupId'];
         familyName = data['familyGroupName'];
       });
@@ -45,6 +64,7 @@ class _FamilyPageState extends State<FamilyPage> {
   }
 
   Future<void> _loadFamilyFromServer() async {
+    _loadFamilyInfoFromServer();
     final response = await authenticatedRequest(
       context: context,
       url: Uri.parse("$BASE_URL/family-groups/members"),
@@ -82,7 +102,7 @@ class _FamilyPageState extends State<FamilyPage> {
   void initState() {
     super.initState();
     if (onServer) {
-      _loadInfoFromServer();
+      _loadMyInfoFromServer();
       _loadFamilyFromServer();
     }
     else {
@@ -326,7 +346,7 @@ class _FamilyPageState extends State<FamilyPage> {
                       url: Uri.parse('$BASE_URL/users?userEmail=$id'), 
                       method: 'GET',
                     );
-
+                    print(response.statusCode);
                     if (response.statusCode != 200) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Please check an ID')),
