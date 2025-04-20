@@ -51,13 +51,14 @@
 
 ## 📁 프로젝트 구조
 
-```plaintext
 📦 FridgeHelper
  ┣ 📂assets             # 앱 리소스 이미지 및 폰트
  ┣ 📂controller         # API 통신, 인증, 전역 설정 등
  ┣ 📂model              # 데이터 모델 정의
  ┣ 📂page               # 각 UI 화면 페이지
  ┗ 📜main.dart          # 앱 진입점
+
+---
 
 ## 🚀 실행 방법
 
