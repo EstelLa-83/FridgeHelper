@@ -249,15 +249,6 @@ class _FridgePageState extends State<SettingPage> {
                 ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                await showTestNotification();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Test notification scheduled (in 10 seconds)')),
-                );
-              },
-              child: const Text('Send Test Notification'),
-            ),
             const SizedBox(height: 20),
             Container(
               width: double.infinity,
