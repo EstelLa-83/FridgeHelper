@@ -31,6 +31,7 @@ class _FamilyPageState extends State<FamilyPage> {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
 
+      if (!mounted) return;
       setState(() {
         myId = data['userId'];
         myName = data['userName'];
@@ -67,6 +68,7 @@ class _FamilyPageState extends State<FamilyPage> {
         return 0;
       });
 
+      if (!mounted) return;
       setState(() {
         memberList = fetchedMembers;
       });
@@ -106,7 +108,9 @@ class _FamilyPageState extends State<FamilyPage> {
           children: [
             FamilyAppBar(
               familyName: familyName, 
-              onRename: () => _showRenameDialog(context)),
+              onRename: () => _showRenameDialog(context),
+              onLeave: () => _showLeaveDialog(context),
+            ),
             const SizedBox(height: 10.0),
             Expanded(
               child: ListView.builder(
@@ -211,6 +215,7 @@ class _FamilyPageState extends State<FamilyPage> {
                     }
                     
                     if (response.statusCode == 200) {
+                      if (!mounted) return;
                       setState(() {
                         familyName = name;
                       });
@@ -231,7 +236,6 @@ class _FamilyPageState extends State<FamilyPage> {
       },
     );
   }    
-
 
   void _showLeaveDialog(BuildContext context) async {
     showDialog(
@@ -319,7 +323,7 @@ class _FamilyPageState extends State<FamilyPage> {
 
                     final response = await authenticatedRequest(
                       context: context, 
-                      url: Uri.parse('$BASE_URL/users/$id'), 
+                      url: Uri.parse('$BASE_URL/users?userEmail=$id'), 
                       method: 'GET',
                     );
 
@@ -329,9 +333,7 @@ class _FamilyPageState extends State<FamilyPage> {
                       );
                     }
                     else {
-                      final data = jsonDecode(utf8.decode(response.bodyBytes));
-                      
-                      final String resultName = data['userName'];
+                      final String resultName = utf8.decode(response.bodyBytes);
 
                       showDialog(
                         context: context,
