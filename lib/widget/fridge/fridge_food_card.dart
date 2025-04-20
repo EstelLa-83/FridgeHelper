@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:fridge/controller/foodImages.dart';
 
 class FridgeFoodCard extends StatelessWidget {
   const FridgeFoodCard({
     super.key,
     required this.name,
+    required this.foodImage,
     required this.count,
     required this.expiryDate,
     required this.onDelete,
@@ -11,6 +13,7 @@ class FridgeFoodCard extends StatelessWidget {
   });
 
   final String name;
+  final int foodImage;
   final int count;
   final DateTime expiryDate;
   final VoidCallback onDelete;
@@ -54,11 +57,19 @@ class FridgeFoodCard extends StatelessWidget {
       ),
       child: Row(
         children: [
+          SizedBox(width: 20),
           // 아이콘
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: const Icon(Icons.food_bank_outlined),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3.0),
+            child: Image.asset(
+              foodImages[foodImage],
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.food_bank),
+              width: 45,
+              height: 45,
+              fit: BoxFit.cover,
+            ),
           ),
+          SizedBox(width: 10,),
           // 텍스트
           Expanded(
             flex: 10,

@@ -41,6 +41,7 @@ Future<void> syncAllExpiringNotifications() async {
 
     final List<Food> foodList = rawFoods.map((f) => Food(
       foodId: f["id"],
+      foodImage: f["icon"],
       name: f["name"],
       expiryDate: DateTime.parse(f["expiryDate"]),
       count: f["count"],

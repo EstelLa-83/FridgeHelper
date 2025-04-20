@@ -5,6 +5,7 @@ import 'package:fridge/widget/fridge/fridge_appbar.dart';
 import 'package:fridge/widget/fridge/fridge_divider.dart';
 import 'package:fridge/controller/global.dart';
 import 'package:fridge/controller/auth_service.dart';
+import 'package:fridge/controller/foodImages.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 
@@ -43,6 +44,7 @@ class _FridgePageState extends State<FridgePage> {
       final List<Food> fetchedFoods = data.map((item) {
         return Food(
           foodId: item['id'],
+          foodImage: item['icon'],
           name: item['name'],
           count: item['count'],
           expiryDate: DateTime.parse(item['expiryDate']),
@@ -125,6 +127,7 @@ class _FridgePageState extends State<FridgePage> {
                     children: <Widget>[
                       FridgeFoodCard(
                         name: item.name,
+                        foodImage: item.foodImage,
                         count: item.count,
                         expiryDate: item.expiryDate,
                         onDelete: () {
@@ -150,14 +153,56 @@ class _FridgePageState extends State<FridgePage> {
     );
   }
 
+  Future<int?> _showFoodImagePicker(BuildContext context) async {
+    return showModalBottomSheet<int>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: 400,
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: foodImages.length,
+            itemBuilder: (context, index) {
+              final imagePath = foodImages[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pop(context, index);
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: 100,
+                    height: 100,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   void showAddFoodDialog(BuildContext context) {
-    final nameController = TextEditingController();
+    int foodImg = 0;
     int count = 1;
-    final countController = TextEditingController(text: count.toString());
     DateTime? selectedDate;
     TimeOfDay? selectedTime;
     String selectedStorageType = "COLD";
+    
     final storageTypeOptions = ["COLD", "FROZEN"];
+    final nameController = TextEditingController();
+    final countController = TextEditingController(text: count.toString());
 
     showDialog(
       context: context,
@@ -172,9 +217,40 @@ class _FridgePageState extends State<FridgePage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(labelText: 'Food Name'),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 2),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () async {
+                                final result = await _showFoodImagePicker(context);
+                                if (result != null) {
+                                  if (!mounted) return;
+                                  setState(() {
+                                    foodImg = result;
+                                  });
+                                }
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8), // 둥근 정도 설정
+                                child: Image.asset(
+                                  foodImages[foodImg],
+                                  width: 44,
+                                  height: 44,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            SizedBox(
+                              width: 200,
+                              child: TextField(
+                                controller: nameController,
+                                decoration: const InputDecoration(labelText: 'Food Name'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -331,6 +407,7 @@ class _FridgePageState extends State<FridgePage> {
                         method: "POST",
                         body: {
                           "name": nameController.text,
+                          "icon": foodImg,
                           "count": count,
                           "expiryDate": DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(expiryDateTime),
                           "memo": "",
@@ -349,9 +426,7 @@ class _FridgePageState extends State<FridgePage> {
                     }
                   },
                 ),
-            
               ],
-            
             );
           },
         );
@@ -398,9 +473,10 @@ class _FridgePageState extends State<FridgePage> {
 
   void showEditDialog(BuildContext context, int idx) {
     final Food targetFood = filteredFoodList[idx];
+    int foodImg = targetFood.foodImage;
+    int count = targetFood.count;
     DateTime selectedDate = targetFood.expiryDate;
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
-    int count = targetFood.count;
     final countController = TextEditingController(text: count.toString());
     String selectedStorageType = targetFood.storageType == "FROZEN" ? "FROZEN" : "COLD";
     final storageTypeOptions = ["COLD", "FROZEN"];
@@ -411,15 +487,37 @@ class _FridgePageState extends State<FridgePage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Container(
-                margin: EdgeInsets.only(top: 10, left: 8),
-                child: Text(
-                  targetFood.name,
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
+              title: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final result = await _showFoodImagePicker(context);
+                      if (result != null) {
+                        if (!mounted) return;
+                        setState(() {
+                          foodImg = result;
+                        });
+                      }
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8), // 둥근 정도 설정
+                      child: Image.asset(
+                        foodImages[foodImg],
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 20),
+                  Text(
+                    targetFood.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
@@ -576,6 +674,7 @@ class _FridgePageState extends State<FridgePage> {
                       method: "PUT",
                       body: {
                         "name": targetFood.name,
+                        "icon": foodImg,
                         "count": parsedCount,
                         "expiryDate":DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(selectedDateTime),
                         "memo": "",
