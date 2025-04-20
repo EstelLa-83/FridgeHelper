@@ -273,7 +273,7 @@ class _FamilyPageState extends State<FamilyPage> {
               final response = await authenticatedRequest(
                 context: context,
                 url: Uri.parse("$BASE_URL/family-groups/leave"),
-                method: "DELETE",
+                method: "POST",
               );
               
               if (response.statusCode == 204) {
@@ -343,10 +343,10 @@ class _FamilyPageState extends State<FamilyPage> {
 
                     final response = await authenticatedRequest(
                       context: context, 
-                      url: Uri.parse('$BASE_URL/users?userEmail=$id'), 
+                      url: Uri.parse('$BASE_URL/users/name?userEmail=$id'), 
                       method: 'GET',
                     );
-                    print(response.statusCode);
+                    
                     if (response.statusCode != 200) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Please check an ID')),
@@ -359,7 +359,7 @@ class _FamilyPageState extends State<FamilyPage> {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Invitation'),
-                          content: Text('Would you like to invite $resultName($id) ?'),
+                          content: Text('Would you like to invite $resultName ($id) ?'),
                           actions: [
                             TextButton(
                               onPressed: () {
@@ -374,14 +374,11 @@ class _FamilyPageState extends State<FamilyPage> {
                                 if (id.isNotEmpty) {
                                   final response = await authenticatedRequest(
                                     context: context, 
-                                    url: Uri.parse('$BASE_URL/invites'), 
+                                    url: Uri.parse('$BASE_URL/invites?email=$id'), 
                                     method: 'POST',
-                                    body: {
-                                      "email": id,
-                                    },
                                   );
 
-                                  if (response.statusCode == 200) {
+                                  if (response.statusCode == 201) {
                                     print('Inviting $id');
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text('Invitation was successful.')),
@@ -390,6 +387,20 @@ class _FamilyPageState extends State<FamilyPage> {
                                     Navigator.pop(context);
                                   }
                                   else {
+                                    String errorMsg = "";
+                                    if (response.statusCode == 409) {
+                                      errorMsg = "You can't invite yourself.";
+                                    }
+                                    else if (response.statusCode == 422) {
+                                      errorMsg = "Already belong to this family.";
+                                    }
+                                    else if (response.statusCode == 400) {
+                                      errorMsg = "Already been invited. Try later.";
+                                    }
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(errorMsg)),
+                                    );
                                     print("Failed to send an invitation: ${response.statusCode}");
                                   }
                                 }

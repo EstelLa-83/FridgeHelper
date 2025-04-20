@@ -3,7 +3,7 @@ class Invite {
   final int fromFamilyGroupId;
   final String fromFamilyGroupName;
   final String inviterName;
-  final int inviterId;
+  final String inviterId;
 
   Invite({
     required this.invitationId,
