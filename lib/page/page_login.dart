@@ -77,6 +77,7 @@ void _showSignUpModal() {
             final pw = _signUpPwController.text;
             final pwCheck = _signUpPwCheckController.text;
 
+            if (!mounted) return;
             setState(() {
               if (pwCheck.isEmpty) {
                 pwMatchResult = "";
@@ -122,6 +123,7 @@ void _showSignUpModal() {
                           onPressed: () async {
                             final id = _signUpIdController.text.trim();
                             if (id.isEmpty) {
+                              if (!mounted) return;
                               setState(() {
                                 idCheckResult = "Please enter an ID first.";
                                 resultColor = Colors.red;
@@ -134,11 +136,13 @@ void _showSignUpModal() {
                             );
 
                             if (checkResponse.statusCode == 200) {
+                              if (!mounted) return;
                               setState(() {
                                 idCheckResult = "Available";
                                 resultColor = Colors.green;
                               });
                             } else {
+                              if (!mounted) return;
                               setState(() {
                                 idCheckResult = "NOT available";
                                 resultColor = Colors.red;
@@ -231,13 +235,16 @@ void _showSignUpModal() {
 
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFFFF),
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: Center(
         child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(40.0, 20.0, 40.0, 20.0),
-          child: Column(
+        padding: const EdgeInsets.fromLTRB(40.0, 0.0, 40.0, 80.0),
+          child: Column(  // HERE
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
@@ -247,7 +254,7 @@ void _showSignUpModal() {
                   fontWeight: FontWeight.bold,
                 ),                
               ),
-              const SizedBox(height: 10.0),
+              const SizedBox(height: 15.0),
               TextField(
                 controller: _idController,
                 decoration: InputDecoration(labelText: 'ID'),

@@ -50,6 +50,7 @@ class _FridgePageState extends State<FridgePage> {
         );
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         foodList = fetchedFoods;
         sortByExpiryDate(foodList);
@@ -107,6 +108,7 @@ class _FridgePageState extends State<FridgePage> {
             const SizedBox(height: 5),
             FridgeDivider(
               onTypeChanged: (type) {
+                if (!mounted) return;
                 setState(() {
                   selectedStorageType = type;
                   getFilteredFoodList();
@@ -182,6 +184,7 @@ class _FridgePageState extends State<FridgePage> {
                                 icon: Icon(Icons.remove),
                                 onPressed: () {
                                   if (count > 1) {
+                                    if (!mounted) return;
                                     setState(() {
                                       count--;
                                       countController.text = count.toString();
@@ -198,6 +201,7 @@ class _FridgePageState extends State<FridgePage> {
                                   onChanged: (val) {
                                     final parsed = int.tryParse(val);
                                     if (parsed != null && parsed > 0) {
+                                      if (!mounted) return;
                                       setState(() {
                                         count = parsed;
                                       });
@@ -208,6 +212,7 @@ class _FridgePageState extends State<FridgePage> {
                               IconButton(
                                 icon: Icon(Icons.add),
                                 onPressed: () {
+                                  if (!mounted) return;
                                   setState(() {
                                     count++;
                                     countController.text = count.toString();
@@ -229,6 +234,7 @@ class _FridgePageState extends State<FridgePage> {
                               );
                             }).toList(),
                             onChanged: (String? newValue) {
+                              if (!mounted) return;
                               setState(() {
                                 selectedStorageType = newValue!;
                               });
@@ -259,6 +265,7 @@ class _FridgePageState extends State<FridgePage> {
                                 lastDate: DateTime(2100),
                               );
                               if (picked != null) {
+                                if (!mounted) return;
                                 setState(() {
                                   selectedDate = picked;
                                 });
@@ -287,6 +294,7 @@ class _FridgePageState extends State<FridgePage> {
                                 initialTime: TimeOfDay(hour: 0, minute: 0),
                               );
                               if (picked != null) {
+                                if (!mounted) return;
                                 setState(() {
                                   selectedTime = picked;
                                 });
@@ -433,6 +441,7 @@ class _FridgePageState extends State<FridgePage> {
                               );
                             }).toList(),
                             onChanged: (String? newValue) {
+                              if (!mounted) return;
                               setState(() {
                                 selectedStorageType = newValue!;
                               });
@@ -447,6 +456,7 @@ class _FridgePageState extends State<FridgePage> {
                             icon: const Icon(Icons.remove),
                             onPressed: () {
                               if (count > 1) {
+                                if (!mounted) return;
                                 setState(() {
                                   count--;
                                   countController.text = count.toString();
@@ -463,6 +473,7 @@ class _FridgePageState extends State<FridgePage> {
                               onChanged: (val) {
                                 final parsed = int.tryParse(val);
                                 if (parsed != null && parsed > 0) {
+                                  if (!mounted) return;
                                   setState(() {
                                     count = parsed;
                                   });
@@ -473,6 +484,7 @@ class _FridgePageState extends State<FridgePage> {
                           IconButton(
                             icon: const Icon(Icons.add),
                             onPressed: () {
+                              if (!mounted) return;
                               setState(() {
                                 count++;
                                 countController.text = count.toString();
@@ -501,6 +513,7 @@ class _FridgePageState extends State<FridgePage> {
                                 lastDate: DateTime(2100),
                               );
                               if (picked != null) {
+                                if (!mounted) return;
                                 setState(() {
                                   selectedDate = picked;
                                 });
@@ -526,6 +539,7 @@ class _FridgePageState extends State<FridgePage> {
                                 initialTime: selectedTime,
                               );
                               if (picked != null) {
+                                if (!mounted) return;
                                 setState(() {
                                   selectedTime = picked;
                                 });

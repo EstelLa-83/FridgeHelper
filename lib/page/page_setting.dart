@@ -26,6 +26,7 @@ class _FridgePageState extends State<SettingPage> {
 
   Future<void> _loadSettings() async {
     final settings = await loadNotificationSettings();
+    if (!mounted) return;
     setState(() {
       _notificationEnabled = settings.enabled;
       _daysBefore = settings.daysBefore;
@@ -146,6 +147,7 @@ class _FridgePageState extends State<SettingPage> {
                         value: _notificationEnabled,
                         activeColor: const Color(0xFF395BA9),
                         onChanged: (value) {
+                          if (!mounted) return;
                           setState(() => _notificationEnabled = value);
                           _saveSettings();
                         },
@@ -184,6 +186,7 @@ class _FridgePageState extends State<SettingPage> {
                                 ),
                               ),
                               onChanged: (value) {
+                                if (!mounted) return;
                                 setState(() => _daysBefore = value ?? 1);
                                 _saveSettings();
                               },
@@ -222,6 +225,7 @@ class _FridgePageState extends State<SettingPage> {
                                 ),
                               ),
                               onChanged: (value) {
+                                if (!mounted) return;
                                 setState(() => _hour = value ?? 13);
                                 _saveSettings();
                               },

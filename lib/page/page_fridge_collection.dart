@@ -36,6 +36,7 @@ class _FridgeCollectionPageState extends State<FridgeCollectionPage> {
         );
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         fridgeList = fetchedFridges;
       });

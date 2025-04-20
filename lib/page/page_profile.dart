@@ -14,7 +14,7 @@ class ProfileEditPage extends StatefulWidget {
 class _ProfileEditPageState extends State<ProfileEditPage> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  late int profile;
+  int profile = 0;
   bool isEditingName = false;
 
   Future<void> _loadUserInfo() async {
@@ -26,6 +26,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
+      if (!mounted) return;
       setState(() {
         nameController.text = data['userName'];
         emailController.text = data['email'];
@@ -49,6 +50,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     );
 
     if (response.statusCode == 200) {
+      if (!mounted) return;
       setState(() => isEditingName = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Name updated successfully')),
@@ -69,7 +71,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     else {
       profile = 1;
     }
-    
   }
 
   @override
@@ -161,7 +162,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               )
                   : IconButton(
                 icon: const Icon(Icons.edit),
-                onPressed: () => setState(() => isEditingName = true),
+                onPressed: () {
+                  if (!mounted) return;
+                  setState(() => isEditingName = true);
+                },
               ),
             ),
             _buildRoundedField(
@@ -211,6 +215,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   );
 
                   if (response.statusCode == 200) {
+                    if (!mounted) return;
                     setState(() {
                       profile = index;
                     });
@@ -257,6 +262,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             void validateMatch() {
+              if (!mounted) return;
               setState(() {
                 isMatch = newPwController.text.isNotEmpty &&
                     confirmPwController.text.isNotEmpty &&
@@ -281,6 +287,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   const SnackBar(content: Text('Password changed successfully')),
                 );
               } else if (response.statusCode == 400) {
+                if (!mounted) return;
                 setState(() => isWrong = true);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
