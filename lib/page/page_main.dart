@@ -5,6 +5,7 @@ import 'package:fridge/controller/auth_service.dart';
 import 'package:fridge/controller/global.dart';
 import 'package:fridge/model/invite.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'dart:async';
 
@@ -96,34 +97,83 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: idx,
-        onTap: (x) {
-          if (!mounted) return;
-          setState(() {
-            idx = x;
-          });
-        },
-        elevation: 20.0,
-        showUnselectedLabels: false,
-        showSelectedLabels: false,
-        unselectedItemColor: Colors.black,
-        selectedItemColor: const Color(0xff395BA9),
-        items:
-            pageList
-                .map(
-                  (Page page) => BottomNavigationBarItem(
-                    backgroundColor: Colors.white,
-                    icon: Icon(page.iconData),
-                    label: page.text,
-                  ),
-                )
-                .toList(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          if (idx != 0) {
+            setState(() {
+              idx = 0;
+            });
+            return;
+          }
+
+          final shouldExit = await _showExitDialog(context);
+          if (shouldExit) {
+            SystemNavigator.pop();
+          } 
+        }
+      },
+      child: Scaffold(
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: idx,
+          onTap: (x) {
+            if (!mounted) return;
+            setState(() {
+              idx = x;
+            });
+          },
+          elevation: 20.0,
+          showUnselectedLabels: false,
+          showSelectedLabels: false,
+          unselectedItemColor: Colors.black,
+          selectedItemColor: const Color(0xff395BA9),
+          items:
+              pageList
+                  .map(
+                    (Page page) => BottomNavigationBarItem(
+                      backgroundColor: Colors.white,
+                      icon: Icon(page.iconData),
+                      label: page.text,
+                    ),
+                  )
+                  .toList(),
+        ),
+        body: _buildBody[idx],
       ),
-      body: _buildBody[idx],
     );
+  }
+
+  Future<bool> _showExitDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 40),
+            Text('Do you want to exit the app?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: Text('Exit'),
+          ),
+        ],
+      ),
+    );
+
+    return result == true;
   }
 
   void _showInviteDialog(Invite invite) {
