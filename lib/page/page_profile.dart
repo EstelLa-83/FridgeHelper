@@ -86,9 +86,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       appBar: AppBar(
         title: const Text("Edit Profile")
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               alignment: Alignment.bottomRight,
